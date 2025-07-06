@@ -71,7 +71,8 @@ export const authAPI = {
   },
 
   getProfile: async () => {
-    return apiRequest('/user/profile');
+    const response = await apiRequest('/auth/profile');
+    return response.user;
   },
 };
 
@@ -79,21 +80,24 @@ export const authAPI = {
 export const postsAPI = {
   getAll: async (userId?: string) => {
     const query = userId ? `?userId=${userId}` : '';
-    return apiRequest(`/posts${query}`);
+    const response = await apiRequest(`/posts${query}`);
+    return response.posts || [];
   },
 
   create: async (postData: { title: string; content: string; date?: string; image?: string }) => {
-    return apiRequest('/posts', {
+    const response = await apiRequest('/posts', {
       method: 'POST',
       body: JSON.stringify(postData),
     });
+    return response.post;
   },
 
   update: async (id: string, postData: { title: string; content: string; date?: string; image?: string }) => {
-    return apiRequest(`/posts/${id}`, {
+    const response = await apiRequest(`/posts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(postData),
     });
+    return response.post;
   },
 
   delete: async (id: string) => {
@@ -107,7 +111,8 @@ export const postsAPI = {
 export const activitiesAPI = {
   getAll: async (userId?: string) => {
     const query = userId ? `?userId=${userId}` : '';
-    return apiRequest(`/activities${query}`);
+    const response = await apiRequest(`/activities${query}`);
+    return response.activities || [];
   },
 
   create: async (activityData: { 
@@ -117,10 +122,11 @@ export const activitiesAPI = {
     links?: string[]; 
     documents?: string[] 
   }) => {
-    return apiRequest('/activities', {
+    const response = await apiRequest('/activities', {
       method: 'POST',
       body: JSON.stringify(activityData),
     });
+    return response.activity;
   },
 
   update: async (id: string, activityData: { 
@@ -130,10 +136,11 @@ export const activitiesAPI = {
     links?: string[]; 
     documents?: string[] 
   }) => {
-    return apiRequest(`/activities/${id}`, {
+    const response = await apiRequest(`/activities/${id}`, {
       method: 'PUT',
       body: JSON.stringify(activityData),
     });
+    return response.activity;
   },
 
   delete: async (id: string) => {
@@ -146,7 +153,8 @@ export const activitiesAPI = {
 // Images API
 export const imagesAPI = {
   getAll: async () => {
-    return apiRequest('/images');
+    const response = await apiRequest('/images');
+    return response.images || [];
   },
 
   upload: async (file: File) => {
@@ -167,7 +175,8 @@ export const imagesAPI = {
       throw new Error(error.error || 'Upload failed');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.image;
   },
 
   delete: async (id: string) => {
