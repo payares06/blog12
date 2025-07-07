@@ -13,32 +13,34 @@ class Database {
         return this.connection;
       }
 
-      // Configuración moderna para MongoDB (sin opciones deprecadas)
+      // Configuración optimizada para MongoDB Atlas
       const options = {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
         family: 4, // Usar IPv4
         bufferCommands: false,
-        bufferMaxEntries: 0
+        bufferMaxEntries: 0,
+        retryWrites: true,
+        w: 'majority'
       };
 
-      // Intentar conectar con la URI principal
-      let mongoUri = process.env.MONGODB_URI;
+      // Usar la URI de MongoDB Atlas proporcionada
+      const mongoUri = process.env.MONGODB_URI;
       
       if (!mongoUri) {
-        console.log('⚠️  No se encontró MONGODB_URI, usando MongoDB local...');
-        mongoUri = 'mongodb://127.0.0.1:27017/mypersonalblog';
+        throw new Error('MONGODB_URI no está configurado en las variables de entorno');
       }
 
-      console.log('🔄 Conectando a MongoDB...');
-      console.log('🌐 URI:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Ocultar credenciales
+      console.log('🔄 Conectando a MongoDB Atlas...');
+      console.log('🌐 Cluster: mypersonalblog.jiu416h.mongodb.net');
       
       this.connection = await mongoose.connect(mongoUri, options);
       
-      console.log('✅ Connected to MongoDB successfully');
+      console.log('✅ Connected to MongoDB Atlas successfully');
       console.log(`📊 Database: ${this.connection.connection.name}`);
       console.log(`🌐 Host: ${this.connection.connection.host}`);
+      console.log(`🔗 Connection State: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
       
       // Configurar eventos de conexión
       mongoose.connection.on('error', (error) => {
@@ -52,59 +54,56 @@ class Database {
       mongoose.connection.on('reconnected', () => {
         console.log('🔄 MongoDB reconnected');
       });
+
+      mongoose.connection.on('connecting', () => {
+        console.log('🔄 MongoDB connecting...');
+      });
+
+      mongoose.connection.on('connected', () => {
+        console.log('✅ MongoDB connected');
+      });
       
       return this.connection;
     } catch (error) {
-      console.error('❌ MongoDB connection error:', error.message);
+      console.error('❌ MongoDB Atlas connection error:', error.message);
       
-      // Si falla la conexión principal, intentar con MongoDB local
-      if (process.env.MONGODB_URI && process.env.MONGODB_URI.includes('mongodb+srv')) {
-        console.log('🔄 Intentando conectar a MongoDB local como fallback...');
-        
-        try {
-          const localUri = 'mongodb://127.0.0.1:27017/mypersonalblog';
-          const localOptions = {
-            maxPoolSize: 10,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            family: 4
-          };
-          
-          this.connection = await mongoose.connect(localUri, localOptions);
-          console.log('✅ Connected to local MongoDB');
-          return this.connection;
-        } catch (localError) {
-          console.error('❌ Local MongoDB connection failed:', localError.message);
-          this.showConnectionHelp();
-          process.exit(1);
-        }
-      } else {
-        this.showConnectionHelp();
-        process.exit(1);
-      }
+      // Mostrar ayuda específica para MongoDB Atlas
+      this.showAtlasConnectionHelp(error);
+      process.exit(1);
     }
   }
 
-  showConnectionHelp() {
-    console.log('\n💡 SOLUCIONES PARA CONECTAR A MONGODB:');
-    console.log('\n🌐 OPCIÓN 1: MongoDB Atlas (Nube - Recomendado)');
-    console.log('   1. Ve a: https://www.mongodb.com/atlas');
-    console.log('   2. Crea una cuenta gratuita');
-    console.log('   3. Crea un cluster gratuito');
-    console.log('   4. Obtén la cadena de conexión');
-    console.log('   5. Actualiza MONGODB_URI en el archivo .env');
+  showAtlasConnectionHelp(error) {
+    console.log('\n💡 SOLUCIONES PARA MONGODB ATLAS:');
     
-    console.log('\n💻 OPCIÓN 2: MongoDB Local');
-    console.log('   1. Descargar desde: https://www.mongodb.com/try/download/community');
-    console.log('   2. Instalar y ejecutar como servicio');
-    console.log('   3. Usar MongoDB Compass para gestión visual');
+    if (error.message.includes('authentication failed')) {
+      console.log('\n🔐 ERROR DE AUTENTICACIÓN:');
+      console.log('   1. Verifica que el usuario y contraseña sean correctos');
+      console.log('   2. Ve a MongoDB Atlas > Database Access');
+      console.log('   3. Verifica que el usuario "mypersonalblog255" existe');
+      console.log('   4. Verifica que la contraseña sea correcta');
+    }
     
-    console.log('\n🐳 OPCIÓN 3: Docker (Rápido)');
-    console.log('   docker run -d -p 27017:27017 --name mongodb mongo:latest');
+    if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      console.log('\n🌐 ERROR DE IP:');
+      console.log('   1. Ve a MongoDB Atlas > Network Access');
+      console.log('   2. Agrega tu IP actual a la lista blanca');
+      console.log('   3. O permite acceso desde cualquier IP (0.0.0.0/0) para desarrollo');
+    }
+    
+    if (error.message.includes('timeout') || error.message.includes('ENOTFOUND')) {
+      console.log('\n🔗 ERROR DE CONEXIÓN:');
+      console.log('   1. Verifica tu conexión a internet');
+      console.log('   2. Verifica que el cluster esté activo en MongoDB Atlas');
+      console.log('   3. Intenta conectar desde MongoDB Compass con la misma URI');
+    }
     
     console.log('\n🔧 CONFIGURACIÓN ACTUAL:');
     console.log(`   MONGODB_URI: ${process.env.MONGODB_URI ? 'Configurado' : 'No configurado'}`);
     console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log('\n📞 SOPORTE:');
+    console.log('   Si el problema persiste, verifica en MongoDB Atlas Dashboard');
+    console.log('   que el cluster esté activo y accesible.');
     console.log('\n');
   }
 
@@ -113,10 +112,10 @@ class Database {
       if (this.connection) {
         await mongoose.disconnect();
         this.connection = null;
-        console.log('🔌 Disconnected from MongoDB');
+        console.log('🔌 Disconnected from MongoDB Atlas');
       }
     } catch (error) {
-      console.error('❌ Error disconnecting from MongoDB:', error.message);
+      console.error('❌ Error disconnecting from MongoDB Atlas:', error.message);
     }
   }
 
@@ -126,6 +125,23 @@ class Database {
 
   isConnected() {
     return mongoose.connection.readyState === 1;
+  }
+
+  // Método para verificar el estado de la conexión
+  getConnectionStatus() {
+    const states = {
+      0: 'Disconnected',
+      1: 'Connected',
+      2: 'Connecting',
+      3: 'Disconnecting'
+    };
+    
+    return {
+      state: states[mongoose.connection.readyState],
+      host: mongoose.connection.host,
+      name: mongoose.connection.name,
+      port: mongoose.connection.port
+    };
   }
 }
 
