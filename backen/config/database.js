@@ -13,13 +13,14 @@ class Database {
         return this.connection;
       }
 
-      // Configuración actualizada para MongoDB (sin opciones deprecadas)
+      // Configuración moderna para MongoDB (sin opciones deprecadas)
       const options = {
-        // Configuraciones de conexión modernas
         maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
-        family: 4 // Usar IPv4
+        family: 4, // Usar IPv4
+        bufferCommands: false,
+        bufferMaxEntries: 0
       };
 
       // Intentar conectar con la URI principal
@@ -31,12 +32,26 @@ class Database {
       }
 
       console.log('🔄 Conectando a MongoDB...');
+      console.log('🌐 URI:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Ocultar credenciales
       
       this.connection = await mongoose.connect(mongoUri, options);
       
       console.log('✅ Connected to MongoDB successfully');
       console.log(`📊 Database: ${this.connection.connection.name}`);
       console.log(`🌐 Host: ${this.connection.connection.host}`);
+      
+      // Configurar eventos de conexión
+      mongoose.connection.on('error', (error) => {
+        console.error('❌ MongoDB connection error:', error);
+      });
+
+      mongoose.connection.on('disconnected', () => {
+        console.log('🔌 MongoDB disconnected');
+      });
+
+      mongoose.connection.on('reconnected', () => {
+        console.log('🔄 MongoDB reconnected');
+      });
       
       return this.connection;
     } catch (error) {
@@ -60,25 +75,37 @@ class Database {
           return this.connection;
         } catch (localError) {
           console.error('❌ Local MongoDB connection failed:', localError.message);
-          console.log('\n💡 SOLUCIONES POSIBLES:');
-          console.log('1. Instalar MongoDB localmente: https://www.mongodb.com/try/download/community');
-          console.log('2. Usar MongoDB Atlas (nube): https://www.mongodb.com/atlas');
-          console.log('3. Usar Docker: docker run -d -p 27017:27017 --name mongodb mongo:latest');
-          console.log('\n🔧 Para instalar MongoDB en Windows:');
-          console.log('   - Descargar desde: https://www.mongodb.com/try/download/community');
-          console.log('   - Ejecutar como servicio de Windows');
-          console.log('   - O usar MongoDB Compass para gestión visual\n');
-          
+          this.showConnectionHelp();
           process.exit(1);
         }
       } else {
-        console.log('\n💡 SOLUCIONES POSIBLES:');
-        console.log('1. Instalar MongoDB localmente: https://www.mongodb.com/try/download/community');
-        console.log('2. Usar MongoDB Atlas (nube): https://www.mongodb.com/atlas');
-        console.log('3. Usar Docker: docker run -d -p 27017:27017 --name mongodb mongo:latest');
+        this.showConnectionHelp();
         process.exit(1);
       }
     }
+  }
+
+  showConnectionHelp() {
+    console.log('\n💡 SOLUCIONES PARA CONECTAR A MONGODB:');
+    console.log('\n🌐 OPCIÓN 1: MongoDB Atlas (Nube - Recomendado)');
+    console.log('   1. Ve a: https://www.mongodb.com/atlas');
+    console.log('   2. Crea una cuenta gratuita');
+    console.log('   3. Crea un cluster gratuito');
+    console.log('   4. Obtén la cadena de conexión');
+    console.log('   5. Actualiza MONGODB_URI en el archivo .env');
+    
+    console.log('\n💻 OPCIÓN 2: MongoDB Local');
+    console.log('   1. Descargar desde: https://www.mongodb.com/try/download/community');
+    console.log('   2. Instalar y ejecutar como servicio');
+    console.log('   3. Usar MongoDB Compass para gestión visual');
+    
+    console.log('\n🐳 OPCIÓN 3: Docker (Rápido)');
+    console.log('   docker run -d -p 27017:27017 --name mongodb mongo:latest');
+    
+    console.log('\n🔧 CONFIGURACIÓN ACTUAL:');
+    console.log(`   MONGODB_URI: ${process.env.MONGODB_URI ? 'Configurado' : 'No configurado'}`);
+    console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log('\n');
   }
 
   async disconnect() {

@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Índice único para email (sin duplicar)
+// SOLO un índice para email (eliminar duplicados)
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ createdAt: -1 });
 
