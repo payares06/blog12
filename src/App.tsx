@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
-import { BlogPost } from './components/BlogPost';
 import { Footer } from './components/Footer';
 import { ActivityView } from './components/ActivityView';
 import { Dashboard } from './components/Dashboard';
@@ -10,6 +9,7 @@ import { SocialView } from './components/SocialView';
 import { useAuth } from './context/AuthContext';
 import { postsAPI, activitiesAPI, siteSettingsAPI } from './services/api';
 import { blogPosts } from './data/blogPosts';
+import { Heart, Eye, MessageCircle } from 'lucide-react';
 
 const characterImages = [
   '/12.png',
