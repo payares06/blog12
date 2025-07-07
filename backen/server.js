@@ -4,6 +4,9 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 // Importar configuraciones y utilidades
@@ -20,6 +23,7 @@ class Server {
   constructor() {
     this.app = express();
     this.port = process.env.PORT || 3001;
+    this.httpsPort = process.env.HTTPS_PORT || 3001;
     
     this.initializeMiddlewares();
     this.initializeRoutes();
@@ -29,7 +33,8 @@ class Server {
   initializeMiddlewares() {
     // Seguridad
     this.app.use(helmet({
-      crossOriginResourcePolicy: { policy: "cross-origin" }
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+      contentSecurityPolicy: false // Disable for development
     }));
 
     // Rate limiting
@@ -43,9 +48,13 @@ class Server {
     });
     this.app.use('/api/', limiter);
 
-    // CORS
+    // CORS configurado para HTTPS
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: [
+        'https://localhost:5173',
+        'http://localhost:5173',
+        process.env.FRONTEND_URL || 'https://localhost:5173'
+      ],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization']
@@ -87,6 +96,7 @@ class Server {
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('X-Frame-Options', 'DENY');
       res.setHeader('X-XSS-Protection', '1; mode=block');
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
       next();
     });
   }
@@ -96,10 +106,11 @@ class Server {
     this.app.get('/api/health', (req, res) => {
       res.json({
         success: true,
-        message: 'Servidor funcionando correctamente',
+        message: 'Servidor funcionando correctamente con HTTPS',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
-        version: '1.0.0'
+        version: '1.0.0',
+        protocol: 'HTTPS'
       });
     });
 
@@ -173,22 +184,79 @@ class Server {
     });
   }
 
+  createHTTPSOptions() {
+    try {
+      const keyPath = path.join(__dirname, 'certs', 'key.pem');
+      const certPath = path.join(__dirname, 'certs', 'cert.pem');
+
+      // Check if certificates exist, if not create them
+      if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+        logger.info('🔐 Certificados HTTPS no encontrados, creando nuevos...');
+        this.createSSLCertificates();
+      }
+
+      return {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+      };
+    } catch (error) {
+      logger.error('Error cargando certificados HTTPS:', error);
+      return null;
+    }
+  }
+
+  createSSLCertificates() {
+    const { execSync } = require('child_process');
+    const certsDir = path.join(__dirname, 'certs');
+
+    // Create certs directory if it doesn't exist
+    if (!fs.existsSync(certsDir)) {
+      fs.mkdirSync(certsDir, { recursive: true });
+    }
+
+    try {
+      // Generate self-signed certificate
+      execSync(`openssl req -x509 -newkey rsa:4096 -keyout ${path.join(certsDir, 'key.pem')} -out ${path.join(certsDir, 'cert.pem')} -days 365 -nodes -subj "/C=CO/ST=Bogota/L=Bogota/O=PersonalBlog/OU=Dev/CN=localhost"`, {
+        stdio: 'inherit'
+      });
+      logger.info('✅ Certificados HTTPS creados exitosamente');
+    } catch (error) {
+      logger.error('❌ Error creando certificados HTTPS:', error);
+      throw error;
+    }
+  }
+
   async start() {
     try {
       // Conectar a la base de datos
       await database.connect();
       
-      // Iniciar servidor
-      this.app.listen(this.port, () => {
-        logger.info(`🚀 Servidor iniciado en puerto ${this.port}`);
-        logger.info(`📡 API disponible en http://localhost:${this.port}/api`);
-        logger.info(`🌍 Entorno: ${process.env.NODE_ENV}`);
-        logger.info(`📊 Base de datos: Conectada`);
-      });
+      // Configurar HTTPS
+      const httpsOptions = this.createHTTPSOptions();
+      
+      if (httpsOptions) {
+        // Iniciar servidor HTTPS
+        const httpsServer = https.createServer(httpsOptions, this.app);
+        
+        httpsServer.listen(this.httpsPort, () => {
+          logger.info(`🚀 Servidor HTTPS iniciado en puerto ${this.httpsPort}`);
+          logger.info(`📡 API disponible en https://localhost:${this.httpsPort}/api`);
+          logger.info(`🌍 Entorno: ${process.env.NODE_ENV}`);
+          logger.info(`📊 Base de datos: Conectada`);
+          logger.info(`🔒 Protocolo: HTTPS (Seguro)`);
+        });
 
-      // Manejo de cierre graceful
-      process.on('SIGTERM', this.gracefulShutdown.bind(this));
-      process.on('SIGINT', this.gracefulShutdown.bind(this));
+        // Manejo de cierre graceful
+        process.on('SIGTERM', this.gracefulShutdown.bind(this));
+        process.on('SIGINT', this.gracefulShutdown.bind(this));
+      } else {
+        // Fallback a HTTP si no se pueden crear certificados
+        logger.warn('⚠️  Iniciando en modo HTTP (no recomendado para producción)');
+        this.app.listen(this.port, () => {
+          logger.info(`🚀 Servidor HTTP iniciado en puerto ${this.port}`);
+          logger.info(`📡 API disponible en http://localhost:${this.port}/api`);
+        });
+      }
 
     } catch (error) {
       logger.error('Error iniciando servidor:', error);
