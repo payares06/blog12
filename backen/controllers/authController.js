@@ -134,7 +134,7 @@ class AuthController {
       // Actualizar último login
       await user.updateLastLogin();
 
-      // Generar token
+      // Generar token - CORREGIDO: usar this.generateToken
       const token = this.generateToken(user._id);
 
       res.json({
@@ -230,4 +230,5 @@ class AuthController {
   }
 }
 
+// Exportar una instancia de la clase para mantener el contexto
 module.exports = new AuthController();
