@@ -110,6 +110,13 @@ export const postsAPI = {
       method: 'DELETE',
     });
   },
+
+  toggleLike: async (id: string) => {
+    const response = await apiRequest(`/posts/${id}/like`, {
+      method: 'POST',
+    });
+    return response;
+  },
 };
 
 // Activities API
