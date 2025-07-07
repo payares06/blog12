@@ -6,8 +6,8 @@ import { healthAPI } from '../services/api';
 
 interface HeaderProps {
   onAuthClick: () => void;
-  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard';
-  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard') => void;
+  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social';
+  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onAuthClick, currentView, onViewChange }) => {
