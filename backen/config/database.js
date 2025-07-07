@@ -20,7 +20,6 @@ class Database {
         socketTimeoutMS: 45000,
         family: 4, // Usar IPv4
         bufferCommands: false,
-        bufferMaxEntries: 0,
         retryWrites: true,
         w: 'majority'
       };
