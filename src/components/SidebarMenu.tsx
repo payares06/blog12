@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 interface SidebarMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social';
-  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social') => void;
+  currentView: 'home' | 'activities' | 'dashboard' | 'social';
+  onViewChange: (view: 'home' | 'activities' | 'dashboard' | 'social') => void;
 }
 
 export const SidebarMenu: React.FC<SidebarMenuProps> = ({ 
@@ -18,11 +18,9 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { id: 'home', label: 'Inicio', icon: Home },
+    { id: 'social', label: 'Inicio', icon: Home },
     { id: 'activities', label: 'Actividades', icon: Activity },
-    { id: 'personal', label: 'Vida Personal', icon: Heart },
-    { id: 'reflections', label: 'Reflexiones', icon: Star },
-    { id: 'social', label: 'Social', icon: Users },
+    { id: 'home', label: 'Mi Blog', icon: Users },
   ];
 
   return (

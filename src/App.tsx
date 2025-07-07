@@ -23,7 +23,7 @@ const characterImages = [
 function AppContent() {
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'activities' | 'dashboard' | 'social'>('social');
   const [refreshKey, setRefreshKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -88,56 +88,7 @@ function AppContent() {
         return <ActivityView key={refreshKey} />;
       case 'social':
         return <SocialView />;
-      case 'personal':
-        return (
-          <section className="py-16 px-4 sm:px-6 lg:px-8 pt-32">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-                  Vida Personal
-                </h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                  Momentos especiales y experiencias de mi día a día
-                </p>
-              </div>
-              <div className="space-y-8">
-                {posts.filter((_: any, index: number) => index % 2 === 0).map((post: any, index: number) => (
-                  <BlogPost
-                    key={`${post._id || post.id}-${refreshKey}`}
-                    post={post}
-                    characterImage={characterImages[index % characterImages.length]}
-                    index={index}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      case 'reflections':
-        return (
-          <section className="py-16 px-4 sm:px-6 lg:px-8 pt-32">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-                  Reflexiones
-                </h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                  Pensamientos profundos y aprendizajes de vida
-                </p>
-              </div>
-              <div className="space-y-8">
-                {posts.filter((_: any, index: number) => index % 2 === 1).map((post: any, index: number) => (
-                  <BlogPost
-                    key={`${post._id || post.id}-${refreshKey}`}
-                    post={post}
-                    characterImage={characterImages[index % characterImages.length]}
-                    index={index}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-        );
+      case 'home':
       default:
         return (
           <>

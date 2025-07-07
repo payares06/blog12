@@ -5,8 +5,8 @@ import { SidebarMenu } from './SidebarMenu';
 
 interface HeaderProps {
   onAuthClick: () => void;
-  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social';
-  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social') => void;
+  currentView: 'home' | 'activities' | 'dashboard' | 'social';
+  onViewChange: (view: 'home' | 'activities' | 'dashboard' | 'social') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onAuthClick, currentView, onViewChange }) => {

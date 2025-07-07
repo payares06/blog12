@@ -317,17 +317,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
               Contenido
             </button>
             <button
-              onClick={() => setActiveTab('images')}
-              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
-                activeTab === 'images'
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-teal-50'
-              }`}
-            >
-              <Image className="inline mr-2" size={20} />
-              Imágenes
-            </button>
-            <button
               onClick={() => setActiveTab('activities')}
               className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === 'activities'
@@ -337,6 +326,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
             >
               <Edit3 className="inline mr-2" size={20} />
               Actividades
+            </button>
+            <button
+              onClick={() => setActiveTab('images')}
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
+                activeTab === 'images'
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-teal-50'
+              }`}
+            >
+              <Image className="inline mr-2" size={20} />
+              Imágenes
             </button>
           </div>
         </div>
