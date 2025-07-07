@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
+import { BlogPost } from './components/BlogPost';
 import { Footer } from './components/Footer';
 import { ActivityView } from './components/ActivityView';
 import { Dashboard } from './components/Dashboard';
