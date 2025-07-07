@@ -1,4 +1,6 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
+import { activitiesAPI } from '../services/api';
 
 const defaultActivities = [
   {
