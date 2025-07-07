@@ -49,8 +49,8 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Índices para optimizar consultas
-userSchema.index({ email: 1 });
+// Índice único para email (sin duplicar)
+userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ createdAt: -1 });
 
 // Middleware para hashear la contraseña antes de guardar
