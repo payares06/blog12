@@ -7,7 +7,7 @@ class AuthController {
     return jwt.sign(
       { userId },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
   }
 
@@ -16,9 +16,12 @@ class AuthController {
     try {
       const { name, email, password } = req.body;
 
+      console.log('📝 Intento de registro:', { name, email });
+
       // Verificar si el usuario ya existe
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
       if (existingUser) {
+        console.log('❌ Usuario ya existe:', email);
         return res.status(400).json({
           success: false,
           error: 'Ya existe un usuario con este email'
@@ -27,12 +30,13 @@ class AuthController {
 
       // Crear nuevo usuario
       const user = new User({
-        name,
-        email,
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
         password
       });
 
       await user.save();
+      console.log('✅ Usuario creado exitosamente:', user._id);
 
       // Generar token
       const token = this.generateToken(user._id);
@@ -49,7 +53,25 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('Error en registro:', error);
+      console.error('❌ Error en registro:', error);
+      
+      // Manejar errores específicos de MongoDB
+      if (error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ya existe un usuario con este email'
+        });
+      }
+      
+      if (error.name === 'ValidationError') {
+        const errors = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({
+          success: false,
+          error: 'Error de validación',
+          details: errors
+        });
+      }
+
       res.status(500).json({
         success: false,
         error: 'Error interno del servidor'
@@ -62,23 +84,31 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
-      // Buscar usuario por email
-      const user = await User.findOne({ email }).select('+password');
+      console.log('🔐 Intento de login:', email);
+
+      // Buscar usuario por email (incluir password para comparación)
+      const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
       if (!user || !user.isActive) {
+        console.log('❌ Usuario no encontrado o inactivo:', email);
         return res.status(401).json({
           success: false,
           error: 'Email o contraseña incorrectos'
         });
       }
 
+      console.log('👤 Usuario encontrado:', user._id);
+
       // Verificar contraseña
       const isValidPassword = await user.comparePassword(password);
       if (!isValidPassword) {
+        console.log('❌ Contraseña incorrecta para:', email);
         return res.status(401).json({
           success: false,
           error: 'Email o contraseña incorrectos'
         });
       }
+
+      console.log('✅ Login exitoso para:', email);
 
       // Actualizar último login
       await user.updateLastLogin();
@@ -99,7 +129,7 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('Error en login:', error);
+      console.error('❌ Error en login:', error);
       res.status(500).json({
         success: false,
         error: 'Error interno del servidor'

@@ -67,10 +67,6 @@ const validateActivity = [
     .optional()
     .isArray()
     .withMessage('Los enlaces deben ser un array'),
-  body('links.*')
-    .optional()
-    .isURL()
-    .withMessage('Cada enlace debe ser una URL válida'),
   handleValidationErrors
 ];
 

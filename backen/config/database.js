@@ -16,14 +16,12 @@ class Database {
       const options = {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        bufferMaxEntries: 0,
-        bufferCommands: false,
       };
 
-      this.connection = await mongoose.connect(process.env.MONGODB_URI, options);
+      // Usar la URI de MongoDB desde las variables de entorno
+      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mypersonalblog';
+      
+      this.connection = await mongoose.connect(mongoUri, options);
       
       console.log('✅ Connected to MongoDB successfully');
       console.log(`📊 Database: ${this.connection.connection.name}`);
@@ -32,7 +30,19 @@ class Database {
       return this.connection;
     } catch (error) {
       console.error('❌ MongoDB connection error:', error.message);
-      process.exit(1);
+      console.log('🔄 Intentando conectar a MongoDB local...');
+      
+      // Fallback a MongoDB local
+      try {
+        const localUri = 'mongodb://localhost:27017/mypersonalblog';
+        this.connection = await mongoose.connect(localUri, options);
+        console.log('✅ Connected to local MongoDB');
+        return this.connection;
+      } catch (localError) {
+        console.error('❌ Local MongoDB connection failed:', localError.message);
+        console.log('💡 Asegúrate de que MongoDB esté ejecutándose localmente');
+        process.exit(1);
+      }
     }
   }
 

@@ -28,14 +28,19 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     },
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'API request failed');
-  }
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'API request failed');
+    }
 
-  return response.json();
+    return response.json();
+  } catch (error) {
+    console.error('API Request Error:', error);
+    throw error;
+  }
 };
 
 // Auth API
