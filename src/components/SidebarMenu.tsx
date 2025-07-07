@@ -1,12 +1,12 @@
 import React from 'react';
-import { X, Home, Activity, Heart, Star, Settings, User, LogOut } from 'lucide-react';
+import { X, Home, Activity, Heart, Star, Settings, User, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard';
-  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard') => void;
+  currentView: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social';
+  onViewChange: (view: 'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social') => void;
 }
 
 export const SidebarMenu: React.FC<SidebarMenuProps> = ({ 
@@ -22,6 +22,7 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     { id: 'activities', label: 'Actividades', icon: Activity },
     { id: 'personal', label: 'Vida Personal', icon: Heart },
     { id: 'reflections', label: 'Reflexiones', icon: Star },
+    { id: 'social', label: 'Social', icon: Users },
   ];
 
   return (

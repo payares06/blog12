@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp } from 'lucide-react';
+import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, Home, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { postsAPI, activitiesAPI, imagesAPI } from '../services/api';
+import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
 
 interface DashboardProps {
   onDataUpdate: () => void;
@@ -9,13 +9,16 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'content' | 'images' | 'activities'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'images' | 'activities' | 'home'>('content');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [posts, setPosts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [images, setImages] = useState<any[]>([]);
+  const [homeSettings, setHomeSettings] = useState({ heroTitle: '', heroDescription: '' });
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Load data from API
   useEffect(() => {
@@ -36,12 +39,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
       } else if (activeTab === 'images') {
         const imagesData = await imagesAPI.getAll();
         setImages(imagesData);
+      } else if (activeTab === 'home') {
+        const settings = await siteSettingsAPI.getSettings();
+        setHomeSettings(settings);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const simulateUploadProgress = () => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
+    return interval;
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,19 +85,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
         return;
       }
 
+      const progressInterval = simulateUploadProgress();
+
       try {
-        setLoading(true);
         await imagesAPI.upload(file);
-        await loadData();
-        onDataUpdate();
+        setUploadProgress(100);
+        setTimeout(async () => {
+          await loadData();
+          onDataUpdate();
+          setIsUploading(false);
+          setUploadProgress(0);
+        }, 500);
       } catch (error) {
         console.error('Upload failed:', error);
         alert('Error al subir la imagen');
-      } finally {
-        setLoading(false);
+        setIsUploading(false);
+        setUploadProgress(0);
+        clearInterval(progressInterval);
       }
     };
     img.src = URL.createObjectURL(file);
+  };
+
+  const handleActivityFileUpload = async (activityId: string, file: File, type: 'document' | 'image') => {
+    const progressInterval = simulateUploadProgress();
+
+    try {
+      if (type === 'document') {
+        await activitiesAPI.uploadDocument(activityId, file);
+      } else {
+        await activitiesAPI.uploadImage(activityId, file);
+      }
+      
+      setUploadProgress(100);
+      setTimeout(async () => {
+        await loadData();
+        onDataUpdate();
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 500);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert(`Error al subir ${type === 'document' ? 'documento' : 'imagen'}`);
+      setIsUploading(false);
+      setUploadProgress(0);
+      clearInterval(progressInterval);
+    }
+  };
+
+  const saveHomeSettings = async () => {
+    try {
+      setLoading(true);
+      await siteSettingsAPI.updateSettings(homeSettings);
+      onDataUpdate();
+      alert('Configuración guardada exitosamente');
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert('Error al guardar la configuración');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startEditing = (id: string, data: any) => {
@@ -138,6 +208,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
     }
   };
 
+  const deleteActivityFile = async (activityId: string, fileId: string, type: 'document' | 'image') => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar este ${type === 'document' ? 'documento' : 'imagen'}?`)) return;
+
+    try {
+      setLoading(true);
+      
+      if (type === 'document') {
+        await activitiesAPI.deleteDocument(activityId, fileId);
+      } else {
+        await activitiesAPI.deleteImage(activityId, fileId);
+      }
+
+      await loadData();
+      onDataUpdate();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Error al eliminar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addNew = () => {
     const newId = 'new-' + Date.now().toString();
     if (activeTab === 'content') {
@@ -157,7 +249,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
         description: 'Descripción de la nueva actividad...',
         character: '/12.png',
         links: [],
-        documents: []
+        documents: [],
+        images: []
       });
     }
   };
@@ -181,12 +274,40 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           <p className="text-lg text-gray-600">Gestiona el contenido de tu blog</p>
         </div>
 
+        {/* Upload Progress Bar */}
+        {isUploading && (
+          <div className="mb-6 bg-white p-4 rounded-lg border-4 border-black shadow-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Upload className="text-teal-600" size={20} />
+              <span className="font-medium text-gray-800">Subiendo archivo...</span>
+              <span className="text-sm text-gray-600">{Math.round(uploadProgress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 border-2 border-black">
+              <div 
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 h-full rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="mb-8">
-          <div className="flex space-x-4 border-b-2 border-black">
+          <div className="flex space-x-4 border-b-2 border-black overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
+                activeTab === 'home'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-emerald-50'
+              }`}
+            >
+              <Home className="inline mr-2" size={20} />
+              Editar Inicio
+            </button>
             <button
               onClick={() => setActiveTab('content')}
-              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors ${
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === 'content'
                   ? 'bg-teal-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-teal-50'
@@ -197,7 +318,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
             </button>
             <button
               onClick={() => setActiveTab('images')}
-              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors ${
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === 'images'
                   ? 'bg-teal-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-teal-50'
@@ -208,7 +329,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
             </button>
             <button
               onClick={() => setActiveTab('activities')}
-              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors ${
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors whitespace-nowrap ${
                 activeTab === 'activities'
                   ? 'bg-teal-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-teal-50'
@@ -224,6 +345,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
             <p className="mt-4 text-gray-600">Cargando...</p>
+          </div>
+        )}
+
+        {/* Home Settings Tab */}
+        {activeTab === 'home' && !loading && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg border-4 border-black shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Configuración del Inicio</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Título Principal
+                  </label>
+                  <input
+                    type="text"
+                    value={homeSettings.heroTitle}
+                    onChange={(e) => setHomeSettings({ ...homeSettings, heroTitle: e.target.value })}
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold text-xl"
+                    placeholder="Bienvenidos a Mi Mundo"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    value={homeSettings.heroDescription}
+                    onChange={(e) => setHomeSettings({ ...homeSettings, heroDescription: e.target.value })}
+                    className="w-full p-3 border-2 border-black rounded-lg h-32"
+                    placeholder="Un espacio donde comparto mis pensamientos, experiencias y momentos especiales..."
+                  />
+                </div>
+                
+                <button
+                  onClick={saveHomeSettings}
+                  className="bg-emerald-500 text-white px-6 py-3 rounded-lg border-2 border-black hover:bg-emerald-600 transition-colors flex items-center gap-2"
+                >
+                  <Save size={20} />
+                  Guardar Configuración
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -382,13 +547,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                   onChange={handleImageUpload}
                   className="hidden"
                   id="character-upload"
+                  disabled={isUploading}
                 />
                 <label
                   htmlFor="character-upload"
-                  className="bg-teal-500 text-white px-4 py-2 rounded-lg border-2 border-black hover:bg-teal-600 transition-colors cursor-pointer flex items-center gap-2"
+                  className={`${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600 cursor-pointer'} text-white px-4 py-2 rounded-lg border-2 border-black transition-colors flex items-center gap-2`}
                 >
                   <Upload size={20} />
-                  Subir Imagen (512x512 PNG)
+                  {isUploading ? 'Subiendo...' : 'Subir Imagen (512x512 PNG)'}
                 </label>
               </div>
             </div>
@@ -488,18 +654,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                             placeholder="Un enlace por línea"
                           />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Documentos</label>
-                          <textarea
-                            value={editData.documents?.join('\n') || ''}
-                            onChange={(e) => setEditData({ 
-                              ...editData, 
-                              documents: e.target.value.split('\n').filter(doc => doc.trim()) 
-                            })}
-                            className="w-full p-3 border-2 border-black rounded-lg h-24"
-                            placeholder="Un documento por línea"
-                          />
-                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -539,17 +693,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                               ))}
                             </div>
                           )}
-                          {activity.documents && activity.documents.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium text-gray-600 mb-1">Documentos:</p>
-                              {activity.documents.map((doc: string, index: number) => (
-                                <p key={index} className="text-gray-700 text-sm">
-                                  <FileUp size={14} className="inline mr-1" />
-                                  {doc}
-                                </p>
-                              ))}
-                            </div>
-                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -566,7 +709,100 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700">{activity.description}</p>
+                      <p className="text-gray-700 mb-4">{activity.description}</p>
+
+                      {/* File Upload Section */}
+                      <div className="border-t-2 border-gray-200 pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Documents Section */}
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-700">Documentos ({activity.documents?.length || 0}/3)</h4>
+                              {(!activity.documents || activity.documents.length < 3) && (
+                                <div>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleActivityFileUpload(activity._id, file, 'document');
+                                    }}
+                                    className="hidden"
+                                    id={`doc-upload-${activity._id}`}
+                                    disabled={isUploading}
+                                  />
+                                  <label
+                                    htmlFor={`doc-upload-${activity._id}`}
+                                    className={`${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'} text-white px-3 py-1 rounded text-sm border-2 border-black transition-colors flex items-center gap-1`}
+                                  >
+                                    <FileUp size={14} />
+                                    Subir Doc
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                              {activity.documents?.map((doc: any, index: number) => (
+                                <div key={doc._id || index} className="flex justify-between items-center bg-gray-50 p-2 rounded border">
+                                  <span className="text-sm text-gray-700 truncate">{doc.name}</span>
+                                  <button
+                                    onClick={() => deleteActivityFile(activity._id, doc._id, 'document')}
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Images Section */}
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-700">Imágenes ({activity.images?.length || 0}/5)</h4>
+                              {(!activity.images || activity.images.length < 5) && (
+                                <div>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleActivityFileUpload(activity._id, file, 'image');
+                                    }}
+                                    className="hidden"
+                                    id={`img-upload-${activity._id}`}
+                                    disabled={isUploading}
+                                  />
+                                  <label
+                                    htmlFor={`img-upload-${activity._id}`}
+                                    className={`${isUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 cursor-pointer'} text-white px-3 py-1 rounded text-sm border-2 border-black transition-colors flex items-center gap-1`}
+                                  >
+                                    <Image size={14} />
+                                    Subir Img
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                              {activity.images?.map((img: any, index: number) => (
+                                <div key={img._id || index} className="relative">
+                                  <img
+                                    src={img.data}
+                                    alt={img.name}
+                                    className="w-full h-16 object-cover rounded border-2 border-black"
+                                  />
+                                  <button
+                                    onClick={() => deleteActivityFile(activity._id, img._id, 'image')}
+                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                  >
+                                    <Trash2 size={10} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -589,31 +825,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                       className="w-full p-3 border-2 border-black rounded-lg h-32"
                       placeholder="Descripción de la actividad"
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
-                        <textarea
-                          value={editData.links?.join('\n') || ''}
-                          onChange={(e) => setEditData({ 
-                            ...editData, 
-                            links: e.target.value.split('\n').filter(link => link.trim()) 
-                          })}
-                          className="w-full p-3 border-2 border-black rounded-lg h-24"
-                          placeholder="Un enlace por línea"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Documentos</label>
-                        <textarea
-                          value={editData.documents?.join('\n') || ''}
-                          onChange={(e) => setEditData({ 
-                            ...editData, 
-                            documents: e.target.value.split('\n').filter(doc => doc.trim()) 
-                          })}
-                          className="w-full p-3 border-2 border-black rounded-lg h-24"
-                          placeholder="Un documento por línea"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
+                      <textarea
+                        value={editData.links?.join('\n') || ''}
+                        onChange={(e) => setEditData({ 
+                          ...editData, 
+                          links: e.target.value.split('\n').filter(link => link.trim()) 
+                        })}
+                        className="w-full p-3 border-2 border-black rounded-lg h-24"
+                        placeholder="Un enlace por línea"
+                      />
                     </div>
                     <div className="flex gap-2">
                       <button

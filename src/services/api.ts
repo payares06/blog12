@@ -153,6 +153,60 @@ export const activitiesAPI = {
       method: 'DELETE',
     });
   },
+
+  uploadDocument: async (activityId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/activities/${activityId}/upload-document`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  uploadImage: async (activityId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/activities/${activityId}/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  deleteDocument: async (activityId: string, documentId: string) => {
+    return apiRequest(`/activities/${activityId}/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  deleteImage: async (activityId: string, imageId: string) => {
+    return apiRequest(`/activities/${activityId}/images/${imageId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Images API
@@ -195,5 +249,39 @@ export const imagesAPI = {
 export const healthAPI = {
   check: async () => {
     return apiRequest('/health');
+  },
+};
+
+// Site Settings API
+export const siteSettingsAPI = {
+  getSettings: async () => {
+    const response = await apiRequest('/site-settings');
+    return response.settings;
+  },
+
+  updateSettings: async (settings: { heroTitle: string; heroDescription: string }) => {
+    const response = await apiRequest('/site-settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+    return response.settings;
+  },
+
+  getPublicSettings: async (userId: string) => {
+    const response = await apiRequest(`/site-settings/public?userId=${userId}`);
+    return response.settings;
+  },
+};
+
+// Users API
+export const usersAPI = {
+  getAll: async () => {
+    const response = await apiRequest('/users');
+    return response.users || [];
+  },
+
+  getById: async (id: string) => {
+    const response = await apiRequest(`/users/${id}`);
+    return response.user;
   },
 };

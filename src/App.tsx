@@ -6,8 +6,9 @@ import { BlogPost } from './components/BlogPost';
 import { Footer } from './components/Footer';
 import { ActivityView } from './components/ActivityView';
 import { Dashboard } from './components/Dashboard';
+import { SocialView } from './components/SocialView';
 import { useAuth } from './context/AuthContext';
-import { postsAPI, activitiesAPI } from './services/api';
+import { postsAPI, activitiesAPI, siteSettingsAPI } from './services/api';
 import { blogPosts } from './data/blogPosts';
 
 const characterImages = [
@@ -21,10 +22,11 @@ const characterImages = [
 function AppContent() {
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'activities' | 'personal' | 'reflections' | 'dashboard'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'activities' | 'personal' | 'reflections' | 'dashboard' | 'social'>('home');
   const [refreshKey, setRefreshKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [homeSettings, setHomeSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Load data from API or fallback to default
@@ -37,22 +39,26 @@ function AppContent() {
     try {
       if (user) {
         // Load user's data from API
-        const [postsData, activitiesData] = await Promise.all([
+        const [postsData, activitiesData, settingsData] = await Promise.all([
           postsAPI.getAll(user.id),
-          activitiesAPI.getAll(user.id)
+          activitiesAPI.getAll(user.id),
+          siteSettingsAPI.getSettings().catch(() => null)
         ]);
         setPosts(postsData.length > 0 ? postsData : []);
         setActivities(activitiesData.length > 0 ? activitiesData : []);
+        setHomeSettings(settingsData);
       } else {
         // Use default data for non-authenticated users
         setPosts(blogPosts);
         setActivities([]);
+        setHomeSettings(null);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
       // Fallback to default data
       setPosts(blogPosts);
       setActivities([]);
+      setHomeSettings(null);
     } finally {
       setLoading(false);
     }
@@ -79,6 +85,8 @@ function AppContent() {
         return <Dashboard onDataUpdate={handleDataUpdate} />;
       case 'activities':
         return <ActivityView key={refreshKey} />;
+      case 'social':
+        return <SocialView />;
       case 'personal':
         return (
           <section className="py-16 px-4 sm:px-6 lg:px-8 pt-32">
@@ -137,11 +145,10 @@ function AppContent() {
               <div className="max-w-4xl mx-auto text-center">
                 <div className="mb-8">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-800 mb-6 animate-fade-in">
-                    Bienvenidos a Mi Mundo
+                    {homeSettings?.heroTitle || 'Bienvenidos a Mi Mundo'}
                   </h1>
                   <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                    Un espacio donde comparto mis pensamientos, experiencias y momentos especiales. 
-                    Cada historia es una ventana a mi corazón y mis reflexiones sobre la vida.
+                    {homeSettings?.heroDescription || 'Un espacio donde comparto mis pensamientos, experiencias y momentos especiales. Cada historia es una ventana a mi corazón y mis reflexiones sobre la vida.'}
                   </p>
                 </div>
                 
