@@ -32,7 +32,7 @@ class AuthController {
       const user = new User({
         name: name.trim(),
         email: email.toLowerCase().trim(),
-        password
+        password: password.trim()
       });
 
       await user.save();
@@ -84,22 +84,43 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
-      console.log('🔐 Intento de login:', email);
+      console.log('🔐 Intento de login para:', email);
+      console.log('🔐 Contraseña recibida:', password ? 'Sí' : 'No');
 
-      // Buscar usuario por email (incluir password para comparación)
-      const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-      if (!user || !user.isActive) {
-        console.log('❌ Usuario no encontrado o inactivo:', email);
+      // Validar que se recibieron email y password
+      if (!email || !password) {
+        console.log('❌ Email o contraseña faltantes');
+        return res.status(400).json({
+          success: false,
+          error: 'Email y contraseña son requeridos'
+        });
+      }
+
+      // Buscar usuario por email e incluir explícitamente el password
+      const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+      
+      if (!user) {
+        console.log('❌ Usuario no encontrado:', email);
         return res.status(401).json({
           success: false,
           error: 'Email o contraseña incorrectos'
         });
       }
 
+      if (!user.isActive) {
+        console.log('❌ Usuario inactivo:', email);
+        return res.status(401).json({
+          success: false,
+          error: 'Cuenta desactivada'
+        });
+      }
+
       console.log('👤 Usuario encontrado:', user._id);
+      console.log('🔍 Hash de contraseña existe:', user.password ? 'Sí' : 'No');
 
       // Verificar contraseña
-      const isValidPassword = await user.comparePassword(password);
+      const isValidPassword = await user.comparePassword(password.trim());
+      
       if (!isValidPassword) {
         console.log('❌ Contraseña incorrecta para:', email);
         return res.status(401).json({

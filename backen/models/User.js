@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'La contraseña es requerida'],
-    minlength: [6, 'La contraseña debe tener al menos 6 caracteres']
+    minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
+    select: false // Por defecto no incluir en consultas
   },
   role: {
     type: String,
@@ -54,20 +55,46 @@ userSchema.index({ createdAt: -1 });
 
 // Middleware para hashear la contraseña antes de guardar
 userSchema.pre('save', async function(next) {
+  // Solo hashear si la contraseña fue modificada
   if (!this.isModified('password')) return next();
   
   try {
+    console.log('🔐 Hasheando contraseña para usuario:', this.email);
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
+    console.log('✅ Contraseña hasheada exitosamente');
     next();
   } catch (error) {
+    console.error('❌ Error hasheando contraseña:', error);
     next(error);
   }
 });
 
 // Método para comparar contraseñas
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  try {
+    console.log('🔍 Comparando contraseñas para usuario:', this.email);
+    console.log('🔍 Contraseña candidata recibida:', candidatePassword ? 'Sí' : 'No');
+    console.log('🔍 Hash almacenado existe:', this.password ? 'Sí' : 'No');
+    
+    if (!this.password) {
+      console.log('❌ No hay hash de contraseña almacenado');
+      return false;
+    }
+    
+    if (!candidatePassword) {
+      console.log('❌ No se proporcionó contraseña candidata');
+      return false;
+    }
+    
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log('🔍 Resultado de comparación:', isMatch ? 'MATCH' : 'NO MATCH');
+    
+    return isMatch;
+  } catch (error) {
+    console.error('❌ Error comparando contraseñas:', error);
+    return false;
+  }
 };
 
 // Método para actualizar último login
