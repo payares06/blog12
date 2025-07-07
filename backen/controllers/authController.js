@@ -134,8 +134,12 @@ class AuthController {
       // Actualizar último login
       await user.updateLastLogin();
 
-      // Generar token - CORREGIDO: usar this.generateToken
-      const token = this.generateToken(user._id);
+      // Generar token
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      );
 
       res.json({
         success: true,
