@@ -7,7 +7,7 @@ import { Footer } from './components/Footer';
 import { ActivityView } from './components/ActivityView';
 import { Dashboard } from './components/Dashboard';
 import { useAuth } from './context/AuthContext';
-import { postsAPI, activitiesAPI } from './services/api';
+import { postsAPI, activitiesAPI, siteSettingsAPI } from './services/api';
 import { blogPosts } from './data/blogPosts';
 import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
 
@@ -26,6 +26,10 @@ function AppContent() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [siteSettings, setSiteSettings] = useState({
+    heroTitle: 'Bienvenidos a Mi Mundo',
+    heroDescription: 'Un espacio donde comparto mis pensamientos, experiencias y momentos especiales. Cada historia es una ventana a mi corazón y mis reflexiones sobre la vida.'
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -56,16 +60,27 @@ function AppContent() {
     try {
       if (user && isOnline) {
         // Load user's data from API
-        const [postsData, activitiesData] = await Promise.all([
+        const [postsData, activitiesData, settingsData] = await Promise.all([
           postsAPI.getAll(user.id),
-          activitiesAPI.getAll(user.id)
+          activitiesAPI.getAll(user.id),
+          siteSettingsAPI.getPublicSettings(user.id)
         ]);
         setPosts(postsData.length > 0 ? postsData : blogPosts);
-        setActivities(activitiesData.length > 0 ? activitiesData : []);
+        setActivities(activitiesData || []);
+        setSiteSettings(settingsData || siteSettings);
       } else {
         // Use default data for non-authenticated users or offline mode
         setPosts(blogPosts);
         setActivities([]);
+        // Try to load public settings if available
+        if (isOnline) {
+          try {
+            const settingsData = await siteSettingsAPI.getPublicSettings();
+            setSiteSettings(settingsData || siteSettings);
+          } catch (err) {
+            // Use default settings if API fails
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -192,11 +207,10 @@ function AppContent() {
               <div className="max-w-4xl mx-auto text-center">
                 <div className="mb-8">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-800 mb-6 animate-fade-in">
-                    Bienvenidos a Mi Mundo
+                    {siteSettings.heroTitle}
                   </h1>
                   <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                    Un espacio donde comparto mis pensamientos, experiencias y momentos especiales. 
-                    Cada historia es una ventana a mi corazón y mis reflexiones sobre la vida.
+                    {siteSettings.heroDescription}
                   </p>
                 </div>
                 

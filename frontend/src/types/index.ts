@@ -35,10 +35,20 @@ export interface Activity {
   character: string;
   links?: string[];
   documents?: Array<{
+    _id?: string;
     name: string;
-    url: string;
-    type: string;
+    data?: string;
     size?: number;
+    mimeType?: string;
+    uploadedAt?: string;
+  }>;
+  images?: Array<{
+    _id?: string;
+    name: string;
+    data?: string;
+    size?: number;
+    mimeType?: string;
+    uploadedAt?: string;
   }>;
   userId?: string;
   isPublished?: boolean;
@@ -61,6 +71,14 @@ export interface CharacterImage {
   tags?: string[];
   description?: string;
   createdAt?: string;
+}
+
+export interface SiteSettings {
+  heroTitle: string;
+  heroDescription: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthContextType {

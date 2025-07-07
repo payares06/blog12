@@ -4,25 +4,78 @@ const path = require('path');
 // Configuración de almacenamiento en memoria
 const storage = multer.memoryStorage();
 
-// Filtro de archivos
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = process.env.ALLOWED_FILE_TYPES.split(',');
+// Filtro de archivos para imágenes de personajes
+const imageFilter = (req, file, cb) => {
+  const allowedImageTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+  
+  if (allowedImageTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Tipo de archivo no permitido. Solo se permiten: ${allowedImageTypes.join(', ')}`), false);
+  }
+};
+
+// Filtro de archivos para documentos
+const documentFilter = (req, file, cb) => {
+  const allowedDocumentTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ];
+  
+  if (allowedDocumentTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Tipo de archivo no permitido. Solo se permiten: PDF, DOC, DOCX, TXT`), false);
+  }
+};
+
+// Filtro general que acepta tanto imágenes como documentos
+const generalFilter = (req, file, cb) => {
+  const allowedTypes = [
+    'image/png', 'image/jpeg', 'image/jpg',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ];
   
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`Tipo de archivo no permitido. Solo se permiten: ${allowedTypes.join(', ')}`), false);
+    cb(new Error(`Tipo de archivo no permitido. Solo se permiten imágenes (PNG, JPG, JPEG) y documentos (PDF, DOC, DOCX, TXT)`), false);
   }
 };
 
-// Configuración de multer
+// Configuración de multer para imágenes de personajes
+const uploadCharacterImage = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB para imágenes
+    files: 1
+  },
+  fileFilter: imageFilter
+});
+
+// Configuración de multer para documentos
+const uploadDocument = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB para documentos
+    files: 1
+  },
+  fileFilter: documentFilter
+});
+
+// Configuración de multer general (para actividades)
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880, // 5MB por defecto
-    files: 1 // Solo un archivo a la vez
+    fileSize: 10 * 1024 * 1024, // 10MB máximo
+    files: 1
   },
-  fileFilter: fileFilter
+  fileFilter: generalFilter
 });
 
 // Middleware para manejar errores de multer
@@ -32,7 +85,7 @@ const handleMulterError = (error, req, res, next) => {
       case 'LIMIT_FILE_SIZE':
         return res.status(400).json({
           success: false,
-          error: 'El archivo es demasiado grande. Máximo 5MB permitido'
+          error: 'El archivo es demasiado grande. Máximo 10MB permitido'
         });
       case 'LIMIT_FILE_COUNT':
         return res.status(400).json({
@@ -64,5 +117,7 @@ const handleMulterError = (error, req, res, next) => {
 
 module.exports = {
   upload,
+  uploadCharacterImage,
+  uploadDocument,
   handleMulterError
 };

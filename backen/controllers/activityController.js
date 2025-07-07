@@ -99,7 +99,6 @@ class ActivityController {
         description, 
         character, 
         links, 
-        documents, 
         category, 
         difficulty, 
         estimatedTime 
@@ -111,7 +110,8 @@ class ActivityController {
         description,
         character: character || '/12.png',
         links: links || [],
-        documents: documents || [],
+        documents: [],
+        images: [],
         category: category || 'academic',
         difficulty: difficulty || 'beginner',
         estimatedTime,
@@ -144,7 +144,6 @@ class ActivityController {
         description, 
         character, 
         links, 
-        documents, 
         category, 
         difficulty, 
         estimatedTime 
@@ -165,7 +164,6 @@ class ActivityController {
           description, 
           character, 
           links, 
-          documents, 
           category, 
           difficulty, 
           estimatedTime 
@@ -187,6 +185,210 @@ class ActivityController {
       });
     } catch (error) {
       console.error('Error actualizando actividad:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Subir documento a actividad
+  async uploadDocument(req, res) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se proporcionó ningún archivo'
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de actividad inválido'
+        });
+      }
+
+      const activity = await Activity.findOne({ _id: id, userId });
+
+      if (!activity) {
+        return res.status(404).json({
+          success: false,
+          error: 'Actividad no encontrada o no autorizada'
+        });
+      }
+
+      if (activity.documents.length >= 3) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se pueden subir más de 3 documentos por actividad'
+        });
+      }
+
+      // Convertir buffer a base64
+      const base64Document = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+      const newDocument = {
+        name: req.file.originalname,
+        data: base64Document,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date()
+      };
+
+      activity.documents.push(newDocument);
+      await activity.save();
+
+      res.json({
+        success: true,
+        message: 'Documento subido exitosamente',
+        document: newDocument
+      });
+    } catch (error) {
+      console.error('Error subiendo documento:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Subir imagen a actividad
+  async uploadImage(req, res) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se proporcionó ningún archivo de imagen'
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de actividad inválido'
+        });
+      }
+
+      const activity = await Activity.findOne({ _id: id, userId });
+
+      if (!activity) {
+        return res.status(404).json({
+          success: false,
+          error: 'Actividad no encontrada o no autorizada'
+        });
+      }
+
+      if (activity.images.length >= 5) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se pueden subir más de 5 imágenes por actividad'
+        });
+      }
+
+      // Convertir buffer a base64
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+      const newImage = {
+        name: req.file.originalname,
+        data: base64Image,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date()
+      };
+
+      activity.images.push(newImage);
+      await activity.save();
+
+      res.json({
+        success: true,
+        message: 'Imagen subida exitosamente',
+        image: newImage
+      });
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Eliminar documento de actividad
+  async deleteDocument(req, res) {
+    try {
+      const { id, documentId } = req.params;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de actividad inválido'
+        });
+      }
+
+      const activity = await Activity.findOne({ _id: id, userId });
+
+      if (!activity) {
+        return res.status(404).json({
+          success: false,
+          error: 'Actividad no encontrada o no autorizada'
+        });
+      }
+
+      activity.documents = activity.documents.filter(doc => doc._id.toString() !== documentId);
+      await activity.save();
+
+      res.json({
+        success: true,
+        message: 'Documento eliminado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error eliminando documento:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Eliminar imagen de actividad
+  async deleteImage(req, res) {
+    try {
+      const { id, imageId } = req.params;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de actividad inválido'
+        });
+      }
+
+      const activity = await Activity.findOne({ _id: id, userId });
+
+      if (!activity) {
+        return res.status(404).json({
+          success: false,
+          error: 'Actividad no encontrada o no autorizada'
+        });
+      }
+
+      activity.images = activity.images.filter(img => img._id.toString() !== imageId);
+      await activity.save();
+
+      res.json({
+        success: true,
+        message: 'Imagen eliminada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error eliminando imagen:', error);
       res.status(500).json({
         success: false,
         error: 'Error interno del servidor'

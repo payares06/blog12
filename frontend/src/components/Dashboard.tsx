@@ -1,24 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, AlertCircle, CheckCircle, X, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { postsAPI, activitiesAPI, imagesAPI } from '../services/api';
+import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
 import { BlogPost, Activity, CharacterImage } from '../types';
 
 interface DashboardProps {
   onDataUpdate: () => void;
 }
 
+interface UploadProgress {
+  [key: string]: number;
+}
+
 export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'content' | 'images' | 'activities'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'images' | 'activities' | 'settings'>('content');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [images, setImages] = useState<CharacterImage[]>([]);
+  const [siteSettings, setSiteSettings] = useState({
+    heroTitle: 'Bienvenidos a Mi Mundo',
+    heroDescription: 'Un espacio donde comparto mis pensamientos, experiencias y momentos especiales. Cada historia es una ventana a mi corazón y mis reflexiones sobre la vida.'
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
 
   // Load data from API
   useEffect(() => {
@@ -41,6 +50,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
       } else if (activeTab === 'images') {
         const imagesData = await imagesAPI.getAll();
         setImages(imagesData);
+      } else if (activeTab === 'settings') {
+        const settingsData = await siteSettingsAPI.getSettings();
+        setSiteSettings(settingsData);
       }
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -80,18 +92,67 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
 
       try {
         setLoading(true);
-        await imagesAPI.upload(file, '', [], false);
+        const uploadId = `image-${Date.now()}`;
+        
+        await imagesAPI.upload(file, '', [], false, (progress) => {
+          setUploadProgress(prev => ({ ...prev, [uploadId]: progress }));
+        });
+        
+        setUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[uploadId];
+          return newProgress;
+        });
+        
         await loadData();
         onDataUpdate();
         showSuccess('Imagen subida exitosamente');
       } catch (error) {
         console.error('Upload failed:', error);
         showError('Error al subir la imagen');
+        setUploadProgress(prev => {
+          const newProgress = { ...prev };
+          delete newProgress[uploadId];
+          return newProgress;
+        });
       } finally {
         setLoading(false);
       }
     };
     img.src = URL.createObjectURL(file);
+  };
+
+  const handleActivityFileUpload = async (activityId: string, file: File, type: 'document' | 'image') => {
+    try {
+      const uploadId = `${type}-${activityId}-${Date.now()}`;
+      
+      if (type === 'document') {
+        await activitiesAPI.uploadDocument(activityId, file, (progress) => {
+          setUploadProgress(prev => ({ ...prev, [uploadId]: progress }));
+        });
+      } else {
+        await activitiesAPI.uploadImage(activityId, file, (progress) => {
+          setUploadProgress(prev => ({ ...prev, [uploadId]: progress }));
+        });
+      }
+      
+      setUploadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[uploadId];
+        return newProgress;
+      });
+      
+      await loadData();
+      showSuccess(`${type === 'document' ? 'Documento' : 'Imagen'} subido exitosamente`);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      showError(`Error al subir ${type === 'document' ? 'el documento' : 'la imagen'}`);
+      setUploadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[uploadId];
+        return newProgress;
+      });
+    }
   };
 
   const startEditing = (id: string, data: any) => {
@@ -121,6 +182,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           await activitiesAPI.create(editData);
           showSuccess('Actividad creada exitosamente');
         }
+      } else if (activeTab === 'settings') {
+        await siteSettingsAPI.updateSettings(editData);
+        showSuccess('Configuración actualizada exitosamente');
       }
 
       await loadData();
@@ -182,7 +246,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
         description: 'Descripción de la nueva actividad...',
         character: '/12.png',
         links: [],
-        documents: [],
         category: 'academic',
         difficulty: 'beginner',
         estimatedTime: 60
@@ -224,6 +287,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           </div>
         )}
 
+        {/* Upload Progress */}
+        {Object.keys(uploadProgress).length > 0 && (
+          <div className="mb-6 space-y-2">
+            {Object.entries(uploadProgress).map(([id, progress]) => (
+              <div key={id} className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-blue-800">Subiendo archivo...</span>
+                  <span className="text-sm text-blue-600">{progress}%</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="mb-8">
           <div className="flex space-x-4 border-b-2 border-black">
@@ -260,6 +343,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
               <Edit3 className="inline mr-2" size={20} />
               Actividades
             </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-6 py-3 font-medium border-2 border-black rounded-t-lg transition-colors ${
+                activeTab === 'settings'
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-teal-50'
+              }`}
+            >
+              <Edit3 className="inline mr-2" size={20} />
+              Configuración
+            </button>
           </div>
         </div>
 
@@ -267,6 +361,83 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           <div className="text-center py-8">
             <div className="loading-spinner mx-auto mb-4"></div>
             <p className="text-gray-600">Cargando...</p>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && !loading && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">Configuración del Sitio</h2>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg border-4 border-black shadow-lg">
+              {isEditing === 'settings' ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Título Principal</label>
+                    <input
+                      type="text"
+                      value={editData.heroTitle || ''}
+                      onChange={(e) => setEditData({ ...editData, heroTitle: e.target.value })}
+                      className="w-full p-3 border-2 border-black rounded-lg font-bold text-xl"
+                      placeholder="Título principal del sitio"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea
+                      value={editData.heroDescription || ''}
+                      onChange={(e) => setEditData({ ...editData, heroDescription: e.target.value })}
+                      className="w-full p-3 border-2 border-black rounded-lg h-32"
+                      placeholder="Descripción que aparece en la página principal"
+                      maxLength={500}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveEdit}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg border-2 border-black hover:bg-green-600 transition-colors flex items-center gap-2"
+                    >
+                      <Save size={16} />
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(null)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg border-2 border-black hover:bg-gray-600 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Configuración del Hero</h3>
+                      <p className="text-sm text-gray-600">Edita el título y descripción que aparecen en la página principal</p>
+                    </div>
+                    <button
+                      onClick={() => startEditing('settings', siteSettings)}
+                      className="bg-blue-500 text-white p-2 rounded-lg border-2 border-black hover:bg-blue-600 transition-colors"
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-1">Título:</h4>
+                      <p className="text-gray-800 text-lg">{siteSettings.heroTitle}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-1">Descripción:</h4>
+                      <p className="text-gray-700">{siteSettings.heroDescription}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -609,31 +780,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                           placeholder="60"
                         />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
-                          <textarea
-                            value={editData.links?.join('\n') || ''}
-                            onChange={(e) => setEditData({ 
-                              ...editData, 
-                              links: e.target.value.split('\n').filter(link => link.trim()) 
-                            })}
-                            className="w-full p-3 border-2 border-black rounded-lg h-24"
-                            placeholder="Un enlace por línea"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Documentos</label>
-                          <textarea
-                            value={editData.documents?.join('\n') || ''}
-                            onChange={(e) => setEditData({ 
-                              ...editData, 
-                              documents: e.target.value.split('\n').filter(doc => doc.trim()) 
-                            })}
-                            className="w-full p-3 border-2 border-black rounded-lg h-24"
-                            placeholder="Un documento por línea"
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
+                        <textarea
+                          value={editData.links?.join('\n') || ''}
+                          onChange={(e) => setEditData({ 
+                            ...editData, 
+                            links: e.target.value.split('\n').filter(link => link.trim()) 
+                          })}
+                          className="w-full p-3 border-2 border-black rounded-lg h-24"
+                          placeholder="Un enlace por línea"
+                        />
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -673,34 +830,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                               </span>
                             )}
                           </div>
-                          {activity.links && activity.links.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium text-gray-600 mb-1">Enlaces:</p>
-                              {activity.links.map((link: string, index: number) => (
-                                <a
-                                  key={index}
-                                  href={link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-teal-600 hover:text-teal-800 text-sm block"
-                                >
-                                  <Link size={14} className="inline mr-1" />
-                                  {link}
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                          {activity.documents && activity.documents.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium text-gray-600 mb-1">Documentos:</p>
-                              {activity.documents.map((doc: any, index: number) => (
-                                <p key={index} className="text-gray-700 text-sm">
-                                  <FileUp size={14} className="inline mr-1" />
-                                  {typeof doc === 'string' ? doc : doc.name}
-                                </p>
-                              ))}
-                            </div>
-                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -717,7 +846,166 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700">{activity.description}</p>
+                      
+                      <p className="text-gray-700 mb-4">{activity.description}</p>
+
+                      {/* Links */}
+                      {activity.links && activity.links.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                            <Link size={14} />
+                            Enlaces:
+                          </h4>
+                          <div className="space-y-1">
+                            {activity.links.map((link: string, index: number) => (
+                              <a
+                                key={index}
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-teal-600 hover:text-teal-800 text-sm block"
+                              >
+                                {link}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Documents */}
+                      {activity.documents && activity.documents.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                            <FileText size={14} />
+                            Documentos ({activity.documents.length}/3):
+                          </h4>
+                          <div className="space-y-2">
+                            {activity.documents.map((doc: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded border">
+                                <div className="flex items-center gap-2">
+                                  <FileText size={16} className="text-gray-600" />
+                                  <span className="text-sm text-gray-700">{doc.name}</span>
+                                  <span className="text-xs text-gray-500">
+                                    ({(doc.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <a
+                                    href={doc.data}
+                                    download={doc.name}
+                                    className="text-blue-600 hover:text-blue-800 p-1"
+                                    title="Descargar"
+                                  >
+                                    <Download size={14} />
+                                  </a>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await activitiesAPI.deleteDocument(activity._id || activity.id, doc._id);
+                                        await loadData();
+                                        showSuccess('Documento eliminado exitosamente');
+                                      } catch (error) {
+                                        showError('Error al eliminar el documento');
+                                      }
+                                    }}
+                                    className="text-red-600 hover:text-red-800 p-1"
+                                    title="Eliminar"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Images */}
+                      {activity.images && activity.images.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-1">
+                            <Image size={14} />
+                            Imágenes ({activity.images.length}/5):
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {activity.images.map((img: any, index: number) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={img.data}
+                                  alt={img.name}
+                                  className="w-full h-24 object-cover rounded border-2 border-gray-300"
+                                />
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await activitiesAPI.deleteImage(activity._id || activity.id, img._id);
+                                      await loadData();
+                                      showSuccess('Imagen eliminada exitosamente');
+                                    } catch (error) {
+                                      showError('Error al eliminar la imagen');
+                                    }
+                                  }}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Eliminar imagen"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Upload buttons */}
+                      <div className="flex gap-2 mt-4">
+                        {(!activity.documents || activity.documents.length < 3) && (
+                          <div>
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx,.txt"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleActivityFileUpload(activity._id || activity.id, file, 'document');
+                                }
+                              }}
+                              className="hidden"
+                              id={`doc-upload-${activity._id || activity.id}`}
+                            />
+                            <label
+                              htmlFor={`doc-upload-${activity._id || activity.id}`}
+                              className="bg-blue-500 text-white px-3 py-1 rounded text-sm border-2 border-black hover:bg-blue-600 transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              <FileUp size={14} />
+                              Subir Documento
+                            </label>
+                          </div>
+                        )}
+                        
+                        {(!activity.images || activity.images.length < 5) && (
+                          <div>
+                            <input
+                              type="file"
+                              accept=".png,.jpg,.jpeg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleActivityFileUpload(activity._id || activity.id, file, 'image');
+                                }
+                              }}
+                              className="hidden"
+                              id={`img-upload-${activity._id || activity.id}`}
+                            />
+                            <label
+                              htmlFor={`img-upload-${activity._id || activity.id}`}
+                              className="bg-green-500 text-white px-3 py-1 rounded text-sm border-2 border-black hover:bg-green-600 transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              <Image size={14} />
+                              Subir Imagen
+                            </label>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -778,31 +1066,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
                         placeholder="60"
                       />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
-                        <textarea
-                          value={editData.links?.join('\n') || ''}
-                          onChange={(e) => setEditData({ 
-                            ...editData, 
-                            links: e.target.value.split('\n').filter(link => link.trim()) 
-                          })}
-                          className="w-full p-3 border-2 border-black rounded-lg h-24"
-                          placeholder="Un enlace por línea"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Documentos</label>
-                        <textarea
-                          value={editData.documents?.join('\n') || ''}
-                          onChange={(e) => setEditData({ 
-                            ...editData, 
-                            documents: e.target.value.split('\n').filter(doc => doc.trim()) 
-                          })}
-                          className="w-full p-3 border-2 border-black rounded-lg h-24"
-                          placeholder="Un documento por línea"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Enlaces</label>
+                      <textarea
+                        value={editData.links?.join('\n') || ''}
+                        onChange={(e) => setEditData({ 
+                          ...editData, 
+                          links: e.target.value.split('\n').filter(link => link.trim()) 
+                        })}
+                        className="w-full p-3 border-2 border-black rounded-lg h-24"
+                        placeholder="Un enlace por línea"
+                      />
                     </div>
                     <div className="flex gap-2">
                       <button

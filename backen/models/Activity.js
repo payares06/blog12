@@ -33,17 +33,45 @@ const activitySchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    url: {
+    data: {
       type: String,
       required: true
     },
-    type: {
+    size: {
+      type: Number,
+      required: true
+    },
+    mimeType: {
       type: String,
-      enum: ['pdf', 'doc', 'docx', 'txt', 'image', 'other'],
-      default: 'other'
+      required: true,
+      enum: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  images: [{
+    name: {
+      type: String,
+      required: true
+    },
+    data: {
+      type: String,
+      required: true
     },
     size: {
-      type: Number
+      type: Number,
+      required: true
+    },
+    mimeType: {
+      type: String,
+      required: true,
+      enum: ['image/png', 'image/jpeg', 'image/jpg']
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
     }
   }],
   userId: {
@@ -71,6 +99,17 @@ const activitySchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Validaciones personalizadas
+activitySchema.pre('save', function(next) {
+  if (this.documents && this.documents.length > 3) {
+    return next(new Error('No se pueden subir más de 3 documentos por actividad'));
+  }
+  if (this.images && this.images.length > 5) {
+    return next(new Error('No se pueden subir más de 5 imágenes por actividad'));
+  }
+  next();
 });
 
 // Índices para optimizar consultas

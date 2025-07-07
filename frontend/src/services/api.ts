@@ -126,6 +126,40 @@ export const authAPI = {
   }
 };
 
+// Site Settings API
+export const siteSettingsAPI = {
+  getSettings: async () => {
+    try {
+      const response = await apiClient.get('/site-settings');
+      const data = handleResponse(response);
+      return data.settings;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateSettings: async (settings: { heroTitle: string; heroDescription: string }) => {
+    try {
+      const response = await apiClient.put('/site-settings', settings);
+      const data = handleResponse(response);
+      return data.settings;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getPublicSettings: async (userId?: string) => {
+    try {
+      const params = userId ? { userId } : {};
+      const response = await apiClient.get('/site-settings/public', { params });
+      const data = handleResponse(response);
+      return data.settings;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+};
+
 // Posts API
 export const postsAPI = {
   getAll: async (userId?: string) => {
@@ -239,7 +273,6 @@ export const activitiesAPI = {
     description: string; 
     character?: string; 
     links?: string[]; 
-    documents?: string[];
     category?: string;
     difficulty?: string;
     estimatedTime?: number;
@@ -258,7 +291,6 @@ export const activitiesAPI = {
     description: string; 
     character?: string; 
     links?: string[]; 
-    documents?: string[];
     category?: string;
     difficulty?: string;
     estimatedTime?: number;
@@ -275,6 +307,70 @@ export const activitiesAPI = {
   delete: async (id: string) => {
     try {
       const response = await apiClient.delete(`/activities/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  uploadDocument: async (activityId: string, file: File, onProgress?: (progress: number) => void) => {
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await apiClient.post(`/activities/${activityId}/upload-document`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(progress);
+          }
+        }
+      });
+      const data = handleResponse(response);
+      return data.document;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  uploadImage: async (activityId: string, file: File, onProgress?: (progress: number) => void) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await apiClient.post(`/activities/${activityId}/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(progress);
+          }
+        }
+      });
+      const data = handleResponse(response);
+      return data.image;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  deleteDocument: async (activityId: string, documentId: string) => {
+    try {
+      const response = await apiClient.delete(`/activities/${activityId}/documents/${documentId}`);
+      return handleResponse(response);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  deleteImage: async (activityId: string, imageId: string) => {
+    try {
+      const response = await apiClient.delete(`/activities/${activityId}/images/${imageId}`);
       return handleResponse(response);
     } catch (error) {
       handleError(error);
@@ -315,7 +411,7 @@ export const imagesAPI = {
     }
   },
 
-  upload: async (file: File, description?: string, tags?: string[], isPublic?: boolean) => {
+  upload: async (file: File, description?: string, tags?: string[], isPublic?: boolean, onProgress?: (progress: number) => void) => {
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -327,6 +423,12 @@ export const imagesAPI = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(progress);
+          }
+        }
       });
       const data = handleResponse(response);
       return data.image;
