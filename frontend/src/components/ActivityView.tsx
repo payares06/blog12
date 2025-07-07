@@ -22,7 +22,7 @@ export const ActivityView: React.FC = () => {
     try {
       if (user) {
         const userActivities = await activitiesAPI.getAll(user.id);
-        // Si el usuario no tiene actividades, mostrar array vacío
+        // Para usuarios autenticados, mostrar solo sus actividades (puede estar vacío)
         setActivities(userActivities || []);
       } else {
         // Para usuarios no autenticados, mostrar actividades por defecto
