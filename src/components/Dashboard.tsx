@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, Home, Users } from 'lucide-react';
+import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, Home, Users, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
+import { PublishModal } from './PublishModal';
 
 interface DashboardProps {
   onDataUpdate: () => void;
@@ -19,6 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
   // Load data from API
   useEffect(() => {
@@ -271,7 +273,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>
-          <p className="text-lg text-gray-600">Gestiona el contenido de tu blog</p>
+          <div className="flex justify-between items-center">
+            <p className="text-lg text-gray-600">Gestiona el contenido de tu blog</p>
+            <button
+              onClick={() => setIsPublishModalOpen(true)}
+              className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-6 py-3 rounded-lg border-2 border-black hover:from-teal-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 font-medium shadow-lg"
+            >
+              <Send size={20} />
+              Publicar
+            </button>
+          </div>
         </div>
 
         {/* Upload Progress Bar */}
@@ -859,6 +870,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
           </div>
         )}
       </div>
+
+      {/* Publish Modal */}
+      <PublishModal
+        isOpen={isPublishModalOpen}
+        onClose={() => setIsPublishModalOpen(false)}
+        onSuccess={onDataUpdate}
+      />
     </div>
   );
 };

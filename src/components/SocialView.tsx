@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircle, Image as ImageIcon, Link, Search, Plus } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircle, Image as ImageIcon, Link, Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { ImageGallery } from './ImageGallery';
+import { PublishModal } from './PublishModal';
 
 interface SocialViewProps {
   selectedUserId?: string;
@@ -17,6 +19,10 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   const [userActivities, setUserActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'profile'>('list');
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryStartIndex, setGalleryStartIndex] = useState(0);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
   useEffect(() => {
     if (selectedUserId) {
@@ -89,6 +95,20 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
       setUserPosts(posts);
     } catch (error) {
       console.error('Failed to like post:', error);
+    }
+  };
+
+  const openImageGallery = (images: any[], startIndex: number = 0) => {
+    setGalleryImages(images);
+    setGalleryStartIndex(startIndex);
+    setIsGalleryOpen(true);
+  };
+
+  const handlePublishSuccess = () => {
+    if (viewMode === 'list') {
+      loadUsers();
+    } else if (selectedUser) {
+      loadUserProfile(selectedUser._id);
     }
   };
 
@@ -222,15 +242,23 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
                             <ImageIcon size={16} />
                             Imágenes ({item.images.length})
                           </p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <div 
+                            className="grid grid-cols-2 md:grid-cols-4 gap-2 cursor-pointer"
+                            onClick={() => openImageGallery(item.images, 0)}
+                          >
                             {item.images.slice(0, 4).map((img: any, imgIndex: number) => (
                               <img
                                 key={imgIndex}
                                 src={img.data}
                                 alt={img.name}
-                                className="w-full h-24 object-cover rounded border-2 border-black"
+                                className="w-full h-24 object-cover rounded border-2 border-black hover:opacity-80 transition-opacity"
                               />
                             ))}
+                            {item.images.length > 4 && (
+                              <div className="w-full h-24 bg-gray-100 rounded border-2 border-black flex items-center justify-center text-gray-600 font-medium">
+                                +{item.images.length - 4}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -349,7 +377,11 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
               <Search size={20} className="text-gray-600" />
             </button>
             {currentUser && (
-              <button className="p-3 bg-teal-500 text-white rounded-full border-2 border-black hover:bg-teal-600 transition-colors">
+              <button 
+                onClick={() => setIsPublishModalOpen(true)}
+                className="p-3 bg-teal-500 text-white rounded-full border-2 border-black hover:bg-teal-600 transition-colors"
+                title="Crear publicación"
+              >
                 <Plus size={20} />
               </button>
             )}
@@ -379,12 +411,28 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
                   currentUser={currentUser}
                   onUserClick={handleUserClick}
                   onLikePost={handleLikePost}
+                  onOpenGallery={openImageGallery}
                 />
               ))}
             </>
           )}
         </div>
       </div>
+
+      {/* Image Gallery Modal */}
+      <ImageGallery
+        images={galleryImages}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        initialIndex={galleryStartIndex}
+      />
+
+      {/* Publish Modal */}
+      <PublishModal
+        isOpen={isPublishModalOpen}
+        onClose={() => setIsPublishModalOpen(false)}
+        onSuccess={handlePublishSuccess}
+      />
     </div>
   );
 };
@@ -395,7 +443,8 @@ const UserFeedCard: React.FC<{
   currentUser: any;
   onUserClick: (userId: string) => void;
   onLikePost: (postId: string) => void;
-}> = ({ user, currentUser, onUserClick, onLikePost }) => {
+  onOpenGallery?: (images: any[], startIndex: number) => void;
+}> = ({ user, currentUser, onUserClick, onLikePost, onOpenGallery }) => {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userActivities, setUserActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -506,18 +555,23 @@ const UserFeedCard: React.FC<{
             {/* Activity Media Preview */}
             {item.type === 'activity' && item.images && item.images.length > 0 && (
               <div className="mb-4">
-                <div className="grid grid-cols-2 gap-2">
+                <div 
+                  className="grid grid-cols-2 gap-2 cursor-pointer"
+                  onClick={() => onOpenGallery && onOpenGallery(item.images, 0)}
+                >
                   {item.images.slice(0, 2).map((img: any, imgIndex: number) => (
                     <img
                       key={imgIndex}
                       src={img.data}
                       alt={img.name}
-                      className="w-full h-24 object-cover rounded-lg border-2 border-black"
+                      className="w-full h-24 object-cover rounded-lg border-2 border-black hover:opacity-80 transition-opacity"
                     />
                   ))}
                 </div>
                 {item.images.length > 2 && (
-                  <p className="text-xs text-gray-500 mt-1">+{item.images.length - 2} más</p>
+                  <p className="text-xs text-gray-500 mt-1 cursor-pointer hover:text-gray-700">
+                    +{item.images.length - 2} más imágenes
+                  </p>
                 )}
               </div>
             )}
