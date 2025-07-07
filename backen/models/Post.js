@@ -42,6 +42,29 @@ const postSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  postImages: [{
+    name: {
+      type: String,
+      required: true
+    },
+    data: {
+      type: String,
+      required: true
+    },
+    size: {
+      type: Number,
+      required: true
+    },
+    mimeType: {
+      type: String,
+      required: true,
+      enum: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   views: {
     type: Number,
     default: 0
@@ -58,6 +81,14 @@ const postSchema = new mongoose.Schema({
   }]
 }, {
   timestamps: true
+});
+
+// Validaciones personalizadas
+postSchema.pre('save', function(next) {
+  if (this.postImages && this.postImages.length > 5) {
+    return next(new Error('No se pueden subir más de 5 imágenes por post'));
+  }
+  next();
 });
 
 // Índices para optimizar consultas

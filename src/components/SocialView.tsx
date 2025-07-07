@@ -552,7 +552,64 @@ const UserFeedCard: React.FC<{
               </p>
             </div>
 
+            {/* Post Images */}
+            {item.type === 'post' && item.postImages && item.postImages.length > 0 && (
+              <div className="mb-4">
+                <div 
+                  className="grid gap-2 cursor-pointer"
+                  onClick={() => openImageGallery(item.postImages, 0)}
+                  style={{
+                    gridTemplateColumns: item.postImages.length === 1 ? '1fr' : 
+                                       item.postImages.length === 2 ? 'repeat(2, 1fr)' :
+                                       item.postImages.length === 3 ? 'repeat(3, 1fr)' :
+                                       'repeat(2, 1fr)'
+                  }}
+                >
+                  {item.postImages.slice(0, 4).map((img: any, imgIndex: number) => (
+                    <img
+                      key={imgIndex}
+                      src={img.data}
+                      alt={img.name}
+                      className={`w-full object-cover rounded border-2 border-black hover:opacity-80 transition-opacity ${
+                        item.postImages.length === 1 ? 'h-64' : 
+                        item.postImages.length === 2 ? 'h-48' : 
+                        'h-32'
+                      }`}
+                    />
+                  ))}
+                  {item.postImages.length > 4 && (
+                    <div className="w-full h-32 bg-gray-100 rounded border-2 border-black flex items-center justify-center text-gray-600 font-medium">
+                      +{item.postImages.length - 4}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Activity Media Preview */}
+            {item.type === 'post' && item.postImages && item.postImages.length > 0 && (
+              <div className="mb-4">
+                <div 
+                  className="grid grid-cols-2 gap-2 cursor-pointer"
+                  onClick={() => onOpenGallery && onOpenGallery(item.postImages, 0)}
+                >
+                  {item.postImages.slice(0, 2).map((img: any, imgIndex: number) => (
+                    <img
+                      key={imgIndex}
+                      src={img.data}
+                      alt={img.name}
+                      className="w-full h-24 object-cover rounded-lg border-2 border-black hover:opacity-80 transition-opacity"
+                    />
+                  ))}
+                </div>
+                {item.postImages.length > 2 && (
+                  <p className="text-xs text-gray-500 mt-1 cursor-pointer hover:text-gray-700">
+                    +{item.postImages.length - 2} más imágenes
+                  </p>
+                )}
+              </div>
+            )}
+
             {item.type === 'activity' && item.images && item.images.length > 0 && (
               <div className="mb-4">
                 <div 

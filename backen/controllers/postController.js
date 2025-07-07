@@ -211,6 +211,108 @@ class PostController {
     }
   }
 
+  // Subir imagen a post
+  async uploadPostImage(req, res) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se proporcionó ningún archivo de imagen'
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de post inválido'
+        });
+      }
+
+      const post = await Post.findOne({ _id: id, userId });
+
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado o no autorizado'
+        });
+      }
+
+      if (post.postImages.length >= 5) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se pueden subir más de 5 imágenes por post'
+        });
+      }
+
+      // Convertir buffer a base64
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+      const newImage = {
+        name: req.file.originalname,
+        data: base64Image,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date()
+      };
+
+      post.postImages.push(newImage);
+      await post.save();
+
+      res.json({
+        success: true,
+        message: 'Imagen subida exitosamente',
+        image: newImage
+      });
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Eliminar imagen de post
+  async deletePostImage(req, res) {
+    try {
+      const { id, imageId } = req.params;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de post inválido'
+        });
+      }
+
+      const post = await Post.findOne({ _id: id, userId });
+
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado o no autorizado'
+        });
+      }
+
+      post.postImages = post.postImages.filter(img => img._id.toString() !== imageId);
+      await post.save();
+
+      res.json({
+        success: true,
+        message: 'Imagen eliminada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error eliminando imagen:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
   // Toggle like en post
   async toggleLike(req, res) {
     try {

@@ -51,7 +51,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, onS
     setIsLoading(true);
     try {
       // Create the post
-      await postsAPI.create({
+      const newPost = await postsAPI.create({
         title: formData.title,
         content: formData.content,
         date: new Date().toLocaleDateString('es-ES', { 
@@ -61,6 +61,18 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, onS
         }),
         image: formData.link || ''
       });
+
+      // Upload images if any
+      if (images.length > 0) {
+        for (const image of images) {
+          try {
+            await postsAPI.uploadImage(newPost._id, image);
+          } catch (error) {
+            console.error('Failed to upload image:', error);
+            // Continue with other images even if one fails
+          }
+        }
+      }
 
       // Reset form
       setFormData({ title: '', content: '', link: '' });

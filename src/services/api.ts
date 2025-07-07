@@ -111,6 +111,33 @@ export const postsAPI = {
     });
   },
 
+  uploadImage: async (postId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/posts/${postId}/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  deleteImage: async (postId: string, imageId: string) => {
+    return apiRequest(`/posts/${postId}/images/${imageId}`, {
+      method: 'DELETE',
+    });
+  },
+
   toggleLike: async (id: string) => {
     const response = await apiRequest(`/posts/${id}/like`, {
       method: 'POST',
