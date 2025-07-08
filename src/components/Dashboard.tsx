@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, Home, Users, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
+import { getBackendStatus } from '../services/api';
 import { PublishModal } from './PublishModal';
 import { FloatingElements } from './FloatingElements';
 import { RandomCharacter } from './RandomCharacter';
@@ -23,6 +24,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [backendError, setBackendError] = useState<string | null>(null);
 
   // Load data from API
   useEffect(() => {
@@ -33,6 +35,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
 
   const loadData = async () => {
     setLoading(true);
+    setBackendError(null);
     try {
       if (activeTab === 'content') {
         const postsData = await postsAPI.getAll(user?.id);
@@ -47,8 +50,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
         const settings = await siteSettingsAPI.getSettings();
         setHomeSettings(settings);
       }
+      
+      // Check backend status
+      if (!getBackendStatus()) {
+        setBackendError('El servidor backend no está disponible. Algunas funciones pueden estar limitadas.');
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
+      setBackendError('Error al cargar datos del servidor. Verifica que el backend esté ejecutándose.');
     } finally {
       setLoading(false);
     }
@@ -310,6 +319,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
             </div>
           </div>
         </div>
+
+        {/* Backend Error Warning */}
+        {backendError && (
+          <div className="mb-6 bg-yellow-100 border-4 border-yellow-500 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">!</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-800">Backend No Disponible</h3>
+                <p className="text-yellow-700 text-sm">{backendError}</p>
+                <p className="text-yellow-600 text-xs mt-1">
+                  Para iniciar el backend: <code className="bg-yellow-200 px-1 rounded">cd backen && npm run dev</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Upload Progress Bar */}
         {isUploading && (

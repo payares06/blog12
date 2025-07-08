@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircle, Image as ImageIcon, Link, Search, Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/api';
+import { getBackendStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ImageGallery } from './ImageGallery';
 import { PublishModal } from './PublishModal';
@@ -29,6 +30,7 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedPostForComments, setSelectedPostForComments] = useState<any>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [backendError, setBackendError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedUserId) {
@@ -41,11 +43,18 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
 
   const loadUsers = async () => {
     setLoading(true);
+    setBackendError(null);
     try {
       const usersData = await usersAPI.getAll();
       setUsers(usersData);
+      
+      // Check if backend is available
+      if (!getBackendStatus()) {
+        setBackendError('El servidor backend no está disponible. Algunas funciones pueden estar limitadas.');
+      }
     } catch (error) {
       console.error('Failed to load users:', error);
+      setBackendError('No se pudo conectar al servidor. Por favor, verifica que el backend esté ejecutándose.');
     } finally {
       setLoading(false);
     }
@@ -188,6 +197,24 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
             )}
           </div>
         </div>
+
+        {/* Backend Error Warning */}
+        {backendError && (
+          <div className="mb-6 bg-yellow-100 border-4 border-yellow-500 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">!</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-yellow-800">Advertencia</h3>
+                <p className="text-yellow-700 text-sm">{backendError}</p>
+                <p className="text-yellow-600 text-xs mt-1">
+                  Para iniciar el backend: <code className="bg-yellow-200 px-1 rounded">cd backen && npm run dev</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Social Feed */}
         <div className="space-y-6">
