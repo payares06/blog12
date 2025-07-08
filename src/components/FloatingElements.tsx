@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Atom, Compass, Satellite, Book, PenTool, Heart, Star, Zap, Globe, Sparkles,
-  Music, Camera, Palette, Coffee, Flower, Sun, Moon, Cloud, Snowflake, Leaf,
-  Diamond, Gem, Crown, Feather, Butterfly, Fish, Bird, Cat, Dog, Rabbit
-} from 'lucide-react';
+import { Atom, Compass, Satellite, Book, PenTool, Heart, Star, Zap, Globe, Sparkles, Music, Camera, Palette, Coffee, Flower, Sun, Moon, Cloud, Snowflake, Leaf, Diamond, Gem, Crown, Feather, Router as Butterfly, Fish, Bird, Cat, Dog, Rabbit } from 'lucide-react';
 
 interface FloatingElementsProps {
   count?: number;
