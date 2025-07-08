@@ -86,6 +86,8 @@ class PostController {
       // Incrementar vistas
       await post.incrementViews();
 
+      // Populate comments with user info
+      await post.populate('comments.userId', 'name email');
       res.json({
         success: true,
         post
@@ -344,6 +346,107 @@ class PostController {
       });
     } catch (error) {
       console.error('Error actualizando like:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Agregar comentario a post
+  async addComment(req, res) {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de post inválido'
+        });
+      }
+
+      if (!content || !content.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'El contenido del comentario es requerido'
+        });
+      }
+
+      const post = await Post.findById(id);
+      
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado'
+        });
+      }
+
+      await post.addComment(userId, content.trim());
+      await post.populate('comments.userId', 'name email');
+
+      res.json({
+        success: true,
+        message: 'Comentario agregado exitosamente',
+        comments: post.comments
+      });
+    } catch (error) {
+      console.error('Error agregando comentario:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Eliminar comentario de post
+  async deleteComment(req, res) {
+    try {
+      const { id, commentId } = req.params;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(commentId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID inválido'
+        });
+      }
+
+      const post = await Post.findById(id);
+      
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado'
+        });
+      }
+
+      const comment = post.comments.find(c => c._id.toString() === commentId);
+      
+      if (!comment) {
+        return res.status(404).json({
+          success: false,
+          error: 'Comentario no encontrado'
+        });
+      }
+
+      // Solo el autor del comentario o del post puede eliminarlo
+      if (comment.userId.toString() !== userId && post.userId.toString() !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'No autorizado para eliminar este comentario'
+        });
+      }
+
+      await post.removeComment(commentId);
+
+      res.json({
+        success: true,
+        message: 'Comentario eliminado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error eliminando comentario:', error);
       res.status(500).json({
         success: false,
         error: 'Error interno del servidor'

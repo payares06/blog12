@@ -65,6 +65,23 @@ const postSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  comments: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    content: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: [500, 'El comentario no puede exceder 500 caracteres']
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
   views: {
     type: Number,
     default: 0
@@ -112,6 +129,18 @@ postSchema.methods.toggleLike = function(userId) {
     this.likes.push({ userId });
   }
   
+  return this.save();
+};
+
+// Método para agregar comentario
+postSchema.methods.addComment = function(userId, content) {
+  this.comments.push({ userId, content });
+  return this.save();
+};
+
+// Método para eliminar comentario
+postSchema.methods.removeComment = function(commentId) {
+  this.comments = this.comments.filter(comment => comment._id.toString() !== commentId.toString());
   return this.save();
 };
 

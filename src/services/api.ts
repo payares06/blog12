@@ -144,6 +144,20 @@ export const postsAPI = {
     });
     return response;
   },
+
+  addComment: async (postId: string, content: string) => {
+    const response = await apiRequest(`/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    return response;
+  },
+
+  deleteComment: async (postId: string, commentId: string) => {
+    return apiRequest(`/posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Activities API

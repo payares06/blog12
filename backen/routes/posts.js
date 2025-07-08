@@ -16,6 +16,10 @@ router.put('/:id', authenticateToken, validatePost, postController.updatePost);
 router.delete('/:id', authenticateToken, postController.deletePost);
 router.post('/:id/like', authenticateToken, postController.toggleLike);
 
+// Rutas para comentarios
+router.post('/:id/comments', authenticateToken, postController.addComment);
+router.delete('/:id/comments/:commentId', authenticateToken, postController.deleteComment);
+
 // Rutas para subir archivos
 router.post('/:id/upload-image', 
   authenticateToken, 
