@@ -165,15 +165,15 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   return (
     <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
       {/* Elementos decorativos del feed social */}
-      <FloatingElements count={8} section="social" />
-      <DecorativeSpheres count={4} />
-      <RandomCharacterGroup count={3} className="hidden lg:block" />
+      <FloatingElements count={4} section="social" />
+      <DecorativeSpheres count={2} />
+      <RandomCharacterGroup count={2} className="hidden lg:block" />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 bg-white rounded-2xl border-4 border-black p-6 shadow-lg">
           <div className="flex items-center gap-4">
-            <RandomCharacter size="small" animated={true} />
+            <RandomCharacter size="small" animated={true} safeMode={true} />
             <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full flex items-center justify-center border-2 border-black">
               <span className="text-xl font-bold text-white">MC</span>
             </div>
@@ -220,7 +220,7 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
         <div className="space-y-6">
           {/* Personaje de bienvenida al feed */}
           <div className="flex justify-center mb-8">
-            <RandomCharacter size="large" animated={true} />
+            <RandomCharacter size="medium" animated={true} />
           </div>
           
           {users.length === 0 ? (
@@ -249,11 +249,12 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
                   />
                   {/* Personajes aleatorios entre usuarios */}
                   {Math.random() > 0.7 && (
-                    <div className="flex justify-center my-6">
+                    <div className="flex justify-center my-6" style={{ zIndex: -1 }}>
                       <RandomCharacter 
                         size="small" 
                         position={Math.random() > 0.5 ? 'left' : 'right'}
-                        animated={true} 
+                        animated={true}
+                        safeMode={true}
                       />
                     </div>
                   )}

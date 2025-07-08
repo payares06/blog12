@@ -110,7 +110,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
   return (
     <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
       {/* Elementos decorativos del perfil */}
-      <FloatingElements count={6} section="profile" />
+      <FloatingElements count={3} section="profile" />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
@@ -126,8 +126,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
         <div className="bg-white rounded-2xl shadow-lg border-4 border-black p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Personaje decorativo en el perfil */}
-            <div className="absolute top-4 right-4 hidden lg:block">
-              <RandomCharacter size="small" animated={true} />
+            <div className="absolute top-4 right-4 hidden lg:block" style={{ zIndex: -1 }}>
+              <RandomCharacter size="small" animated={true} safeMode={true} />
             </div>
             
             {/* Profile Picture */}

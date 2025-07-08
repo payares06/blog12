@@ -44,18 +44,18 @@ export const AnimatedCharacter: React.FC<AnimatedCharacterProps> = ({
   return (
     <div
       id={`character-${alt}`}
-      className={`absolute ${position === 'right' ? '-right-12' : '-left-12'} top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out ${
+      className={`absolute ${position === 'right' ? '-right-12' : '-left-12'} top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out decorative-background ${
         isVisible 
           ? 'opacity-100 scale-100' 
           : `opacity-0 scale-0 ${position === 'right' ? 'translate-x-8' : '-translate-x-8'}`
       }`}
-      style={{ zIndex: 10 }}
+      style={{ zIndex: -1 }}
     >
       <div className="relative">
         <img
           src={imageSrc}
           alt={alt}
-          className="w-52 h-52 sm:w-60 sm:h-60 drop-shadow-2xl"
+          className="w-40 h-40 sm:w-48 sm:h-48 drop-shadow-2xl opacity-80"
         />
       </div>
     </div>

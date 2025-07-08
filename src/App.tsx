@@ -97,8 +97,8 @@ function AppContent() {
             {/* Hero Section */}
             <section className="relative py-20 px-4 sm:px-6 lg:px-8 pt-32 overflow-hidden">
               {/* Elementos decorativos de fondo */}
-              <FloatingElements count={8} section="hero" />
-              <DecorativeSpheres count={5} />
+              <FloatingElements count={6} section="hero" />
+              <DecorativeSpheres count={3} />
               <RandomCharacterGroup count={2} className="hidden lg:block" />
               
               <div className="max-w-4xl mx-auto text-center">
@@ -124,7 +124,7 @@ function AppContent() {
             {/* Blog Posts Section */}
             <section className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
               {/* Elementos decorativos para la sección de posts */}
-              <FloatingElements count={6} section="posts" />
+              <FloatingElements count={4} section="posts" />
               <RandomCharacterGroup count={1} className="hidden md:block" />
               
               <div className="max-w-7xl mx-auto">

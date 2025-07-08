@@ -52,7 +52,7 @@ export const BlogPost: React.FC<BlogPostProps> = ({ post, characterImage, index 
       {/* Desktop Layout */}
       <div className="hidden sm:flex items-center justify-center min-h-[350px]">
         <div className={`flex items-center ${isEven ? 'justify-start' : 'justify-end'} w-full`}>
-          <div className={`bg-white rounded-3xl shadow-lg p-8 border-4 border-black ${
+          <div className={`bg-white rounded-3xl shadow-lg p-8 border-4 border-black content-area ${
             isEven ? 'mr-32' : 'ml-32'
           } max-w-3xl relative z-20`}>
             <div className="mb-4">

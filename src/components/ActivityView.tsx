@@ -46,9 +46,9 @@ export const ActivityView: React.FC = () => {
   return (
     <section className="relative py-16 px-4 sm:px-6 lg:px-8 pt-32 overflow-hidden">
       {/* Elementos decorativos */}
-      <FloatingElements count={7} section="activities" />
+      <FloatingElements count={4} section="activities" />
       <DecorativeSpheres count={3} />
-      <RandomCharacterGroup count={2} className="hidden lg:block" />
+      <RandomCharacterGroup count={1} className="hidden lg:block" />
       
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
@@ -103,7 +103,7 @@ export const ActivityView: React.FC = () => {
           <div className="space-y-8">
             {/* Personaje de bienvenida */}
             <div className="flex justify-center mb-12">
-              <RandomCharacter size="large" animated={true} />
+              <RandomCharacter size="medium" animated={true} />
             </div>
             
             {activities.map((activity: any, index: number) => {
@@ -115,8 +115,8 @@ export const ActivityView: React.FC = () => {
                 <div key={activity._id} className="relative mb-8 sm:mb-16 max-w-7xl mx-auto">
                   {/* Personajes aleatorios ocasionales */}
                   {index % 3 === 0 && index > 0 && (
-                    <div className="absolute -top-8 right-4 hidden lg:block">
-                      <RandomCharacter size="small" animated={true} />
+                    <div className="absolute -top-8 -right-16 hidden lg:block" style={{ zIndex: -1 }}>
+                      <RandomCharacter size="small" animated={true} safeMode={true} />
                     </div>
                   )}
                   

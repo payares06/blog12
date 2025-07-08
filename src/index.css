@@ -114,6 +114,17 @@ button:hover {
   transform: translateY(-1px);
 }
 
+/* Ensure decorative elements stay behind content */
+.decorative-background {
+  z-index: -1 !important;
+}
+
+/* Content areas should have higher z-index */
+.content-area {
+  position: relative;
+  z-index: 1;
+}
+
 /* Line clamp utility */
 .line-clamp-3 {
   display: -webkit-box;
