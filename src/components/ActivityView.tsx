@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { FloatingElements, DecorativeSpheres } from './FloatingElements';
+import { RandomCharacter, RandomCharacterGroup } from './RandomCharacter';
 
 export const ActivityView: React.FC = () => {
   const { user } = useAuth();
@@ -42,7 +44,12 @@ export const ActivityView: React.FC = () => {
   }
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 pt-32">
+    <section className="relative py-16 px-4 sm:px-6 lg:px-8 pt-32 overflow-hidden">
+      {/* Elementos decorativos */}
+      <FloatingElements count={7} section="activities" />
+      <DecorativeSpheres count={3} />
+      <RandomCharacterGroup count={2} className="hidden lg:block" />
+      
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
@@ -94,6 +101,11 @@ export const ActivityView: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Personaje de bienvenida */}
+            <div className="flex justify-center mb-12">
+              <RandomCharacter size="large" animated={true} />
+            </div>
+            
             {activities.map((activity: any, index: number) => {
               const isEven = index % 2 === 0;
               const characterImages = ['/12.png', '/13.png', '/14.png', '/15.png', '/16.png'];
@@ -101,6 +113,13 @@ export const ActivityView: React.FC = () => {
               
               return (
                 <div key={activity._id} className="relative mb-8 sm:mb-16 max-w-7xl mx-auto">
+                  {/* Personajes aleatorios ocasionales */}
+                  {index % 3 === 0 && index > 0 && (
+                    <div className="absolute -top-8 right-4 hidden lg:block">
+                      <RandomCharacter size="small" animated={true} />
+                    </div>
+                  )}
+                  
                   {/* Mobile Layout */}
                   <div className="sm:hidden">
                     <div className="flex flex-col items-center space-y-4">
