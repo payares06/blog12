@@ -3,6 +3,8 @@ import { Save, Upload, Edit3, Image, FileText, Trash2, Plus, Link, FileUp, Home,
 import { useAuth } from '../context/AuthContext';
 import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
 import { PublishModal } from './PublishModal';
+import { FloatingElements } from './FloatingElements';
+import { RandomCharacter } from './RandomCharacter';
 
 interface DashboardProps {
   onDataUpdate: () => void;
@@ -285,9 +287,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen pt-32 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Elementos decorativos del dashboard */}
+      <FloatingElements count={5} section="dashboard" />
+      
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <RandomCharacter size="medium" animated={true} />
+            <div className="flex-1">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>
           <div className="flex justify-between items-center">
             <p className="text-lg text-gray-600">Gestiona el contenido de tu blog</p>
@@ -298,6 +306,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
               <Send size={20} />
               Publicar
             </button>
+          </div>
+            </div>
           </div>
         </div>
 

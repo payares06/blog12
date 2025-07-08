@@ -6,6 +6,8 @@ import { ImageGallery } from './ImageGallery';
 import { PublishModal } from './PublishModal';
 import { UserProfile } from './UserProfile';
 import { CommentModal } from './CommentModal';
+import { FloatingElements, DecorativeSpheres } from './FloatingElements';
+import { RandomCharacter, RandomCharacterGroup } from './RandomCharacter';
 
 interface SocialViewProps {
   selectedUserId?: string;
@@ -152,11 +154,17 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
 
   // Forum-style Users List View
   return (
-    <div className="min-h-screen pt-20 pb-16" style={{ backgroundColor: '#F5F5DC' }}>
+    <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
+      {/* Elementos decorativos del feed social */}
+      <FloatingElements count={8} section="social" />
+      <DecorativeSpheres count={4} />
+      <RandomCharacterGroup count={3} className="hidden lg:block" />
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 bg-white rounded-2xl border-4 border-black p-6 shadow-lg">
           <div className="flex items-center gap-4">
+            <RandomCharacter size="small" animated={true} />
             <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full flex items-center justify-center border-2 border-black">
               <span className="text-xl font-bold text-white">MC</span>
             </div>
@@ -183,6 +191,11 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
 
         {/* Social Feed */}
         <div className="space-y-6">
+          {/* Personaje de bienvenida al feed */}
+          <div className="flex justify-center mb-8">
+            <RandomCharacter size="large" animated={true} />
+          </div>
+          
           {users.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border-4 border-black shadow-lg">
               <User size={64} className="mx-auto text-gray-400 mb-4" />
@@ -198,15 +211,26 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
             <>
               {/* Load all posts and activities from all users */}
               {users.map((user: any) => (
-                <UserFeedCard 
-                  key={user._id} 
-                  user={user} 
-                  currentUser={currentUser}
-                  onUserClick={handleUserClick}
-                  onLikePost={handleLikePost}
-                  onOpenGallery={openImageGallery}
-                  onOpenComments={openCommentModal}
-                />
+                <div key={user._id}>
+                  <UserFeedCard 
+                    user={user} 
+                    currentUser={currentUser}
+                    onUserClick={handleUserClick}
+                    onLikePost={handleLikePost}
+                    onOpenGallery={openImageGallery}
+                    onOpenComments={openCommentModal}
+                  />
+                  {/* Personajes aleatorios entre usuarios */}
+                  {Math.random() > 0.7 && (
+                    <div className="flex justify-center my-6">
+                      <RandomCharacter 
+                        size="small" 
+                        position={Math.random() > 0.5 ? 'left' : 'right'}
+                        animated={true} 
+                      />
+                    </div>
+                  )}
+                </div>
               ))}
             </>
           )}

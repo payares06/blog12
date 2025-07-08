@@ -3,6 +3,8 @@ import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircl
 import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ImageGallery } from './ImageGallery';
+import { FloatingElements } from './FloatingElements';
+import { RandomCharacter } from './RandomCharacter';
 
 interface UserProfileProps {
   userId: string;
@@ -106,7 +108,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
   );
 
   return (
-    <div className="min-h-screen pt-20 pb-16" style={{ backgroundColor: '#F5F5DC' }}>
+    <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
+      {/* Elementos decorativos del perfil */}
+      <FloatingElements count={6} section="profile" />
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
@@ -120,6 +125,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl shadow-lg border-4 border-black p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
+            {/* Personaje decorativo en el perfil */}
+            <div className="absolute top-4 right-4 hidden lg:block">
+              <RandomCharacter size="small" animated={true} />
+            </div>
+            
             {/* Profile Picture */}
             <div className="w-32 h-32 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center border-4 border-black shadow-lg">
               <span className="text-4xl font-bold text-white">

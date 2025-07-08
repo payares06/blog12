@@ -1,10 +1,20 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Calendar, Heart } from 'lucide-react';
+import { RandomCharacter } from './RandomCharacter';
+import { FloatingElements } from './FloatingElements';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white border-t-4 border-black">
+    <footer className="relative bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white border-t-4 border-black overflow-hidden">
+      {/* Elementos decorativos en el footer */}
+      <FloatingElements count={4} section="footer" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Personajes en el footer */}
+        <div className="flex justify-center mb-6">
+          <RandomCharacter size="medium" animated={true} />
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Contact Info */}
           <div className="space-y-4">
