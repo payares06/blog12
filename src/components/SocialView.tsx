@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircle, Image as ImageIcon, Link, Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircle, Image as ImageIcon, Link, Search, Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ImageGallery } from './ImageGallery';
 import { PublishModal } from './PublishModal';
+import { UserProfile } from './UserProfile';
+import { CommentModal } from './CommentModal';
 
 interface SocialViewProps {
   selectedUserId?: string;
@@ -23,6 +25,8 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryStartIndex, setGalleryStartIndex] = useState(0);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [selectedPostForComments, setSelectedPostForComments] = useState<any>(null);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
 
   useEffect(() => {
     if (selectedUserId) {
@@ -112,6 +116,19 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
     }
   };
 
+  const openCommentModal = (post: any) => {
+    setSelectedPostForComments(post);
+    setIsCommentModalOpen(true);
+  };
+
+  const handleCommentUpdate = () => {
+    if (viewMode === 'list') {
+      loadUsers();
+    } else if (selectedUser) {
+      loadUserProfile(selectedUser._id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-32">
@@ -125,235 +142,11 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
 
   // Profile View - User's Personal Blog
   if (viewMode === 'profile' && selectedUser) {
-    const characterImages = ['/12.png', '/13.png', '/14.png', '/15.png', '/16.png'];
-    
     return (
-      <div className="min-h-screen pt-32 pb-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#F5F5DC' }}>
-        <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <button
-            onClick={handleBackToList}
-            className="mb-6 flex items-center gap-2 text-teal-600 hover:text-teal-800 transition-colors bg-white px-4 py-2 rounded-lg border-2 border-black shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
-            <ArrowLeft size={20} />
-            Volver al Foro
-          </button>
-
-          {/* User Profile Header */}
-          <div className="bg-white rounded-2xl shadow-lg border-4 border-black p-8 mb-8">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              {/* Profile Picture */}
-              <div className="w-32 h-32 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center border-4 border-black shadow-lg">
-                <span className="text-4xl font-bold text-white">
-                  {selectedUser.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-                </span>
-              </div>
-
-              {/* User Info */}
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">{selectedUser.name}</h1>
-                <p className="text-gray-600 mb-4">{selectedUser.email}</p>
-                
-                {/* User Stats */}
-                <div className="flex justify-center md:justify-start gap-6">
-                  <div className="text-center">
-                    <div className="flex items-center gap-1 text-teal-600 justify-center">
-                      <FileText size={16} />
-                      <span className="font-bold text-lg">{userPosts.length}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">Posts</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center gap-1 text-emerald-600 justify-center">
-                      <Activity size={16} />
-                      <span className="font-bold text-lg">{userActivities.length}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">Actividades</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center gap-1 text-blue-600 justify-center">
-                      <Calendar size={16} />
-                      <span className="font-bold text-lg">
-                        {new Date(selectedUser.createdAt).getFullYear()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">Miembro desde</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bio/Description */}
-            <div className="mt-6 pt-6 border-t-2 border-gray-200">
-              <p className="text-gray-700 text-lg leading-relaxed">
-                {userSettings?.heroDescription || `Bienvenido al blog personal de ${selectedUser.name}. Aquí comparte sus pensamientos, experiencias y reflexiones.`}
-              </p>
-            </div>
-          </div>
-
-          {/* Posts and Activities Feed */}
-          <div className="space-y-6">
-            {/* Combine posts and activities into a single feed */}
-            {[...userPosts.map(post => ({ ...post, type: 'post' })), 
-              ...userActivities.map(activity => ({ ...activity, type: 'activity' }))
-            ]
-              .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
-              .map((item: any, index: number) => (
-                <div key={`${item.type}-${item._id}`} className="bg-white rounded-2xl shadow-lg border-4 border-black p-6">
-                  {/* User Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center border-2 border-black">
-                      <span className="text-lg font-bold text-white">
-                        {selectedUser.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">{selectedUser.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {item.type === 'post' ? item.date : new Date(item.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="ml-auto">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border-2 border-black ${
-                        item.type === 'post' 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {item.type === 'post' ? 'Post' : 'Actividad'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="mb-4">
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      {item.type === 'post' ? item.content : item.description}
-                    </p>
-                  </div>
-
-                  {/* Activity specific content */}
-                  {item.type === 'activity' && (
-                    <div className="mb-4 space-y-3">
-                      {/* Images */}
-                      {item.images && item.images.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-600 mb-2 flex items-center gap-1">
-                            <ImageIcon size={16} />
-                            Imágenes ({item.images.length})
-                          </p>
-                          <div 
-                            className="grid grid-cols-2 md:grid-cols-4 gap-2 cursor-pointer"
-                            onClick={() => openImageGallery(item.images, 0)}
-                          >
-                            {item.images.slice(0, 4).map((img: any, imgIndex: number) => (
-                              <img
-                                key={imgIndex}
-                                src={img.data}
-                                alt={img.name}
-                                className="w-full h-24 object-cover rounded border-2 border-black hover:opacity-80 transition-opacity"
-                              />
-                            ))}
-                            {item.images.length > 4 && (
-                              <div className="w-full h-24 bg-gray-100 rounded border-2 border-black flex items-center justify-center text-gray-600 font-medium">
-                                +{item.images.length - 4}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Documents */}
-                      {item.documents && item.documents.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-600 mb-2 flex items-center gap-1">
-                            <FileText size={16} />
-                            Documentos ({item.documents.length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {item.documents.map((doc: any, docIndex: number) => (
-                              <span
-                                key={docIndex}
-                                className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm border-2 border-black"
-                              >
-                                {doc.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Links */}
-                      {item.links && item.links.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-600 mb-2 flex items-center gap-1">
-                            <Link size={16} />
-                            Enlaces
-                          </p>
-                          <div className="space-y-1">
-                            {item.links.map((link: string, linkIndex: number) => (
-                              <a
-                                key={linkIndex}
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-sm block"
-                              >
-                                {link}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Interaction Bar */}
-                  <div className="flex items-center gap-6 pt-4 border-t-2 border-gray-100">
-                    {item.type === 'post' && (
-                      <>
-                        <button
-                          onClick={() => handleLikePost(item._id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black transition-colors ${
-                            item.likes && item.likes.some((like: any) => like.userId === currentUser?.id)
-                              ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          <Heart size={16} />
-                          <span>{item.likes ? item.likes.length : 0}</span>
-                        </button>
-                        
-                        <div className="flex items-center gap-2 text-gray-500">
-                          <Eye size={16} />
-                          <span>{item.views || 0} visualizaciones</span>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <MessageCircle size={16} />
-                      <span>Comentarios</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-
-          {/* Empty State */}
-          {userPosts.length === 0 && userActivities.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-2xl border-4 border-black">
-              <User size={64} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-2xl font-bold text-gray-600 mb-2">
-                {selectedUser.name} aún no ha publicado contenido
-              </h3>
-              <p className="text-gray-500">
-                Vuelve más tarde para ver sus posts y actividades
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      <UserProfile 
+        userId={selectedUser._id} 
+        onBack={handleBackToList} 
+      />
     );
   }
 
@@ -412,6 +205,7 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
                   onUserClick={handleUserClick}
                   onLikePost={handleLikePost}
                   onOpenGallery={openImageGallery}
+                  onOpenComments={openCommentModal}
                 />
               ))}
             </>
@@ -433,6 +227,14 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
         onClose={() => setIsPublishModalOpen(false)}
         onSuccess={handlePublishSuccess}
       />
+
+      {/* Comment Modal */}
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        post={selectedPostForComments}
+        onUpdate={handleCommentUpdate}
+      />
     </div>
   );
 };
@@ -444,7 +246,8 @@ const UserFeedCard: React.FC<{
   onUserClick: (userId: string) => void;
   onLikePost: (postId: string) => void;
   onOpenGallery?: (images: any[], startIndex: number) => void;
-}> = ({ user, currentUser, onUserClick, onLikePost, onOpenGallery }) => {
+  onOpenComments?: (post: any) => void;
+}> = ({ user, currentUser, onUserClick, onLikePost, onOpenGallery, onOpenComments }) => {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userActivities, setUserActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -557,7 +360,7 @@ const UserFeedCard: React.FC<{
               <div className="mb-4">
                 <div 
                   className="grid gap-2 cursor-pointer"
-                  onClick={() => openImageGallery(item.postImages, 0)}
+                  onClick={() => onOpenGallery && onOpenGallery(item.postImages, 0)}
                   style={{
                     gridTemplateColumns: item.postImages.length === 1 ? '1fr' : 
                                        item.postImages.length === 2 ? 'repeat(2, 1fr)' :
@@ -587,29 +390,6 @@ const UserFeedCard: React.FC<{
             )}
 
             {/* Activity Media Preview */}
-            {item.type === 'post' && item.postImages && item.postImages.length > 0 && (
-              <div className="mb-4">
-                <div 
-                  className="grid grid-cols-2 gap-2 cursor-pointer"
-                  onClick={() => onOpenGallery && onOpenGallery(item.postImages, 0)}
-                >
-                  {item.postImages.slice(0, 2).map((img: any, imgIndex: number) => (
-                    <img
-                      key={imgIndex}
-                      src={img.data}
-                      alt={img.name}
-                      className="w-full h-24 object-cover rounded-lg border-2 border-black hover:opacity-80 transition-opacity"
-                    />
-                  ))}
-                </div>
-                {item.postImages.length > 2 && (
-                  <p className="text-xs text-gray-500 mt-1 cursor-pointer hover:text-gray-700">
-                    +{item.postImages.length - 2} más imágenes
-                  </p>
-                )}
-              </div>
-            )}
-
             {item.type === 'activity' && item.images && item.images.length > 0 && (
               <div className="mb-4">
                 <div 
@@ -633,27 +413,32 @@ const UserFeedCard: React.FC<{
               </div>
             )}
 
-            {/* Interaction Bar */}
+            {/* Post Actions */}
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div className="flex items-center gap-4">
                 {item.type === 'post' && (
-                  <button
-                    onClick={() => onLikePost(item._id)}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full border border-black transition-colors text-sm ${
-                      item.likes && item.likes.some((like: any) => like.userId === currentUser?.id)
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Heart size={14} />
-                    <span>{item.likes ? item.likes.length : 0}</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => onLikePost(item._id)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-full border border-black transition-colors text-sm ${
+                        item.likes && item.likes.some((like: any) => like.userId === currentUser?.id)
+                          ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Heart size={14} fill={item.likes && item.likes.some((like: any) => like.userId === currentUser?.id) ? 'currentColor' : 'none'} />
+                      <span>{item.likes ? item.likes.length : 0}</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => onOpenComments && onOpenComments(item)}
+                      className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-sm border border-black"
+                    >
+                      <MessageCircle size={14} />
+                      <span>{item.comments?.length || 0}</span>
+                    </button>
+                  </>
                 )}
-                
-                <button className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-sm border border-black">
-                  <MessageCircle size={14} />
-                  <span>Comentar</span>
-                </button>
               </div>
               
               {item.type === 'post' && (
