@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services/api';
 import { getBackendStatus } from '../services/api';
 import { PublishModal } from './PublishModal';
-import { FloatingElements } from './FloatingElements';
+import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
 import { RandomCharacter } from './RandomCharacter';
 
 interface DashboardProps {
@@ -298,7 +298,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
   return (
     <div className="relative min-h-screen pt-32 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Elementos decorativos del dashboard */}
-      <FloatingElements count={3} section="dashboard" />
+      <FloatingElements count={8} section="dashboard" />
+      <DecorativeSpheres count={4} />
+      <GeometricShapes count={2} />
+      <FloatingParticles count={10} />
       
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">

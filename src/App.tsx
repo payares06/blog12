@@ -9,7 +9,7 @@ import { Dashboard } from './components/Dashboard';
 import { SocialView } from './components/SocialView';
 import { useAuth } from './context/AuthContext';
 import { postsAPI, activitiesAPI, siteSettingsAPI } from './services/api';
-import { FloatingElements, DecorativeSpheres } from './components/FloatingElements';
+import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './components/FloatingElements';
 import { RandomCharacter, RandomCharacterGroup } from './components/RandomCharacter';
 import { blogPosts } from './data/blogPosts';
 import { Heart, Eye, MessageCircle } from 'lucide-react';
@@ -97,8 +97,10 @@ function AppContent() {
             {/* Hero Section */}
             <section className="relative py-20 px-4 sm:px-6 lg:px-8 pt-32 overflow-hidden">
               {/* Elementos decorativos de fondo */}
-              <FloatingElements count={6} section="hero" />
-              <DecorativeSpheres count={3} />
+              <FloatingElements count={12} section="hero" />
+              <DecorativeSpheres count={6} />
+              <GeometricShapes count={4} />
+              <FloatingParticles count={20} />
               <RandomCharacterGroup count={2} className="hidden lg:block" />
               
               <div className="max-w-4xl mx-auto text-center">
@@ -124,7 +126,10 @@ function AppContent() {
             {/* Blog Posts Section */}
             <section className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
               {/* Elementos decorativos para la sección de posts */}
-              <FloatingElements count={4} section="posts" />
+              <FloatingElements count={10} section="posts" />
+              <DecorativeSpheres count={4} />
+              <GeometricShapes count={3} />
+              <FloatingParticles count={15} />
               <RandomCharacterGroup count={1} className="hidden md:block" />
               
               <div className="max-w-7xl mx-auto">

@@ -3,7 +3,7 @@ import { ArrowLeft, User, Calendar, FileText, Activity, Eye, Heart, MessageCircl
 import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ImageGallery } from './ImageGallery';
-import { FloatingElements } from './FloatingElements';
+import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
 import { RandomCharacter } from './RandomCharacter';
 
 interface UserProfileProps {
@@ -110,7 +110,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
   return (
     <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
       {/* Elementos decorativos del perfil */}
-      <FloatingElements count={3} section="profile" />
+      <FloatingElements count={8} section="profile" />
+      <DecorativeSpheres count={4} />
+      <GeometricShapes count={3} />
+      <FloatingParticles count={12} />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}

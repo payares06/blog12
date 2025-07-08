@@ -7,7 +7,7 @@ import { ImageGallery } from './ImageGallery';
 import { PublishModal } from './PublishModal';
 import { UserProfile } from './UserProfile';
 import { CommentModal } from './CommentModal';
-import { FloatingElements, DecorativeSpheres } from './FloatingElements';
+import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
 import { RandomCharacter, RandomCharacterGroup } from './RandomCharacter';
 
 interface SocialViewProps {
@@ -165,8 +165,10 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   return (
     <div className="relative min-h-screen pt-20 pb-16 overflow-hidden" style={{ backgroundColor: '#F5F5DC' }}>
       {/* Elementos decorativos del feed social */}
-      <FloatingElements count={4} section="social" />
-      <DecorativeSpheres count={2} />
+      <FloatingElements count={10} section="social" />
+      <DecorativeSpheres count={6} />
+      <GeometricShapes count={4} />
+      <FloatingParticles count={18} />
       <RandomCharacterGroup count={2} className="hidden lg:block" />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

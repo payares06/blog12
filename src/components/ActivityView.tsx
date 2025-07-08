@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FloatingElements, DecorativeSpheres } from './FloatingElements';
+import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
 import { RandomCharacter, RandomCharacterGroup } from './RandomCharacter';
 
 export const ActivityView: React.FC = () => {
@@ -46,8 +46,10 @@ export const ActivityView: React.FC = () => {
   return (
     <section className="relative py-16 px-4 sm:px-6 lg:px-8 pt-32 overflow-hidden">
       {/* Elementos decorativos */}
-      <FloatingElements count={4} section="activities" />
-      <DecorativeSpheres count={3} />
+      <FloatingElements count={8} section="activities" />
+      <DecorativeSpheres count={5} />
+      <GeometricShapes count={3} />
+      <FloatingParticles count={12} />
       <RandomCharacterGroup count={1} className="hidden lg:block" />
       
       <div className="max-w-7xl mx-auto">

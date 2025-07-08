@@ -1,13 +1,15 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Calendar, Heart } from 'lucide-react';
 import { RandomCharacter } from './RandomCharacter';
-import { FloatingElements } from './FloatingElements';
+import { FloatingElements, DecorativeSpheres, FloatingParticles } from './FloatingElements';
 
 export const Footer: React.FC = () => {
   return (
     <footer className="relative bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white border-t-4 border-black overflow-hidden">
       {/* Elementos decorativos en el footer */}
-      <FloatingElements count={3} section="footer" />
+      <FloatingElements count={6} section="footer" />
+      <DecorativeSpheres count={3} />
+      <FloatingParticles count={8} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Personajes en el footer */}
