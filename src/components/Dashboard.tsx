@@ -232,6 +232,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
     }
   };
 
+  const deletePostImage = async (postId: string, imageId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta imagen?')) return;
+
+    try {
+      setLoading(true);
+      await postsAPI.deleteImage(postId, imageId);
+      await loadData();
+      onDataUpdate();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Error al eliminar la imagen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addNew = () => {
     const newId = 'new-' + Date.now().toString();
     if (activeTab === 'content') {
