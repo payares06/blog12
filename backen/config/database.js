@@ -21,7 +21,9 @@ class Database {
         family: 4, // Usar IPv4
         bufferCommands: false,
         retryWrites: true,
-        w: 'majority'
+        w: 'majority',
+        useNewUrlParser: true,
+        useUnifiedTopology: true
       };
 
       // Usar la URI de MongoDB Atlas proporcionada
@@ -44,10 +46,12 @@ class Database {
       // Configurar eventos de conexión
       mongoose.connection.on('error', (error) => {
         console.error('❌ MongoDB connection error:', error);
+        this.connection = null; // Reset connection on error
       });
 
       mongoose.connection.on('disconnected', () => {
         console.log('🔌 MongoDB disconnected');
+        this.connection = null; // Reset connection on disconnect
       });
 
       mongoose.connection.on('reconnected', () => {
@@ -68,6 +72,7 @@ class Database {
       
       // Mostrar ayuda específica para MongoDB Atlas
       this.showAtlasConnectionHelp(error);
+      this.connection = null; // Reset connection on error
       process.exit(1);
     }
   }

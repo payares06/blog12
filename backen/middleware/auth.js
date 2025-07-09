@@ -13,7 +13,26 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      if (jwtError.name === 'JsonWebTokenError') {
+        return res.status(403).json({ 
+          success: false,
+          error: 'Token inválido' 
+        });
+      }
+      
+      if (jwtError.name === 'TokenExpiredError') {
+        return res.status(403).json({ 
+          success: false,
+          error: 'Token expirado' 
+        });
+      }
+      
+      throw jwtError;
+    }
     
     // Verificar que el usuario aún existe
     const user = await User.findById(decoded.userId).select('-password');
@@ -33,19 +52,6 @@ const authenticateToken = async (req, res, next) => {
     
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(403).json({ 
-        success: false,
-        error: 'Token inválido' 
-      });
-    }
-    
-    if (error.name === 'TokenExpiredError') {
-      return res.status(403).json({ 
-        success: false,
-        error: 'Token expirado' 
-      });
-    }
 
     console.error('Error en autenticación:', error);
     res.status(500).json({ 

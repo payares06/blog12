@@ -85,7 +85,6 @@ class AuthController {
       const { email, password } = req.body;
 
       console.log('🔐 Intento de login para:', email);
-      console.log('🔐 Contraseña recibida:', password ? 'Sí' : 'No');
 
       // Validar que se recibieron email y password
       if (!email || !password) {
@@ -93,6 +92,15 @@ class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Email y contraseña son requeridos'
+        });
+      }
+
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Formato de email inválido'
         });
       }
 
@@ -116,7 +124,6 @@ class AuthController {
       }
 
       console.log('👤 Usuario encontrado:', user._id);
-      console.log('🔍 Hash de contraseña existe:', user.password ? 'Sí' : 'No');
 
       // Verificar contraseña
       const isValidPassword = await user.comparePassword(password.trim());
@@ -132,7 +139,12 @@ class AuthController {
       console.log('✅ Login exitoso para:', email);
 
       // Actualizar último login
-      await user.updateLastLogin();
+      try {
+        await user.updateLastLogin();
+      } catch (updateError) {
+        console.warn('⚠️ Error actualizando último login:', updateError);
+        // No fallar el login por esto
+      }
 
       // Generar token
       const token = jwt.sign(

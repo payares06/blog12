@@ -75,15 +75,14 @@ class Server {
     // Body parsing
     this.app.use(express.json({ 
       limit: '10mb',
-      verify: (req, res, buf) => {
+      verify: (req, res, buf, encoding) => {
         try {
           JSON.parse(buf);
         } catch (e) {
-          res.status(400).json({
-            success: false,
-            error: 'JSON inválido'
-          });
-          throw new Error('JSON inválido');
+          console.error('❌ JSON inválido recibido:', e.message);
+          const error = new Error('JSON inválido');
+          error.status = 400;
+          throw error;
         }
       }
     }));
@@ -142,6 +141,14 @@ class Server {
   initializeErrorHandling() {
     // Manejo global de errores
     this.app.use((error, req, res, next) => {
+      // Error de JSON parsing
+      if (error.status === 400 && error.message === 'JSON inválido') {
+        return res.status(400).json({
+          success: false,
+          error: 'JSON inválido en el cuerpo de la petición'
+        });
+      }
+
       logger.error('Error no manejado:', {
         error: error.message,
         stack: error.stack,
@@ -174,6 +181,21 @@ class Server {
         return res.status(400).json({
           success: false,
           error: 'ID inválido'
+        });
+      }
+
+      // Error de JWT
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          success: false,
+          error: 'Token inválido'
+        });
+      }
+
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          error: 'Token expirado'
         });
       }
 

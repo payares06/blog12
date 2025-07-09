@@ -74,8 +74,6 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     console.log('🔍 Comparando contraseñas para usuario:', this.email);
-    console.log('🔍 Contraseña candidata recibida:', candidatePassword ? 'Sí' : 'No');
-    console.log('🔍 Hash almacenado existe:', this.password ? 'Sí' : 'No');
     
     if (!this.password) {
       console.log('❌ No hay hash de contraseña almacenado');
@@ -88,7 +86,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     }
     
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    console.log('🔍 Resultado de comparación:', isMatch ? 'MATCH' : 'NO MATCH');
+    console.log('🔍 Resultado de comparación:', isMatch ? '✅ MATCH' : '❌ NO MATCH');
     
     return isMatch;
   } catch (error) {
@@ -99,8 +97,13 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Método para actualizar último login
 userSchema.methods.updateLastLogin = function() {
-  this.lastLogin = new Date();
-  return this.save();
+  try {
+    this.lastLogin = new Date();
+    return this.save();
+  } catch (error) {
+    console.error('❌ Error actualizando último login:', error);
+    throw error;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

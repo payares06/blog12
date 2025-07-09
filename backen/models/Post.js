@@ -82,10 +82,6 @@ const postSchema = new mongoose.Schema({
       default: Date.now
     }
   }]
-  views: {
-    type: Number,
-    default: 0
-  },
   likes: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -95,7 +91,11 @@ const postSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  views: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true
 });
