@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { activitiesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
-import { RandomCharacter, RandomCharacterGroup } from './RandomCharacter';
 
 export const ActivityView: React.FC = () => {
   const { user } = useAuth();
@@ -50,7 +49,6 @@ export const ActivityView: React.FC = () => {
       <DecorativeSpheres count={5} />
       <GeometricShapes count={3} />
       <FloatingParticles count={12} />
-      <RandomCharacterGroup count={1} className="hidden lg:block" />
       
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
@@ -103,11 +101,6 @@ export const ActivityView: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Personaje de bienvenida */}
-            <div className="flex justify-center mb-12">
-              <RandomCharacter size="medium" animated={true} />
-            </div>
-            
             {activities.map((activity: any, index: number) => {
               const isEven = index % 2 === 0;
               const characterImages = ['/12.png', '/13.png', '/14.png', '/15.png', '/16.png'];
@@ -115,13 +108,6 @@ export const ActivityView: React.FC = () => {
               
               return (
                 <div key={activity._id} className="relative mb-8 sm:mb-16 max-w-7xl mx-auto">
-                  {/* Personajes aleatorios ocasionales */}
-                  {index % 3 === 0 && index > 0 && (
-                    <div className="absolute -top-8 -right-16 hidden lg:block" style={{ zIndex: -1 }}>
-                      <RandomCharacter size="small" animated={true} safeMode={true} />
-                    </div>
-                  )}
-                  
                   {/* Mobile Layout */}
                   <div className="sm:hidden">
                     <div className="flex flex-col items-center space-y-4">

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Calendar, Heart } from 'lucide-react';
-import { RandomCharacter } from './RandomCharacter';
 import { FloatingElements, DecorativeSpheres, FloatingParticles } from './FloatingElements';
 
 export const Footer: React.FC = () => {
@@ -12,11 +11,6 @@ export const Footer: React.FC = () => {
       <FloatingParticles count={8} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Personajes en el footer */}
-        <div className="flex justify-center mb-6">
-          <RandomCharacter size="small" animated={true} />
-        </div>
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Contact Info */}
           <div className="space-y-4">

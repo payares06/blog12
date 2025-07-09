@@ -1,6 +1,5 @@
 import React from 'react';
 import { BlogPost as BlogPostType } from '../types';
-import { AnimatedCharacter } from './AnimatedCharacter';
 
 interface BlogPostProps {
   post: BlogPostType;
@@ -79,12 +78,6 @@ export const BlogPost: React.FC<BlogPostProps> = ({ post, characterImage, index 
             </div>
           </div>
 
-          <AnimatedCharacter
-            imageSrc={characterImage}
-            alt={`character-${index}`}
-            delay={index * 300}
-            position={characterPosition}
-          />
         </div>
       </div>
     </article>

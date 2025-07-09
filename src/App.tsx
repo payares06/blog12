@@ -10,7 +10,6 @@ import { SocialView } from './components/SocialView';
 import { useAuth } from './context/AuthContext';
 import { postsAPI, activitiesAPI, siteSettingsAPI } from './services/api';
 import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './components/FloatingElements';
-import { RandomCharacter, RandomCharacterGroup } from './components/RandomCharacter';
 import { blogPosts } from './data/blogPosts';
 import { Heart, Eye, MessageCircle } from 'lucide-react';
 
@@ -101,7 +100,6 @@ function AppContent() {
               <DecorativeSpheres count={6} />
               <GeometricShapes count={4} />
               <FloatingParticles count={20} />
-              <RandomCharacterGroup count={2} className="hidden lg:block" />
               
               <div className="max-w-4xl mx-auto text-center">
                 <div className="mb-8">
@@ -130,7 +128,6 @@ function AppContent() {
               <DecorativeSpheres count={4} />
               <GeometricShapes count={3} />
               <FloatingParticles count={15} />
-              <RandomCharacterGroup count={1} className="hidden md:block" />
               
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-12">
@@ -161,11 +158,6 @@ function AppContent() {
                   </div>
                 ) : (
                   <div className="space-y-8">
-                    {/* Personaje aleatorio entre posts */}
-                    <div className="flex justify-center my-8">
-                      <RandomCharacter size="large" animated={true} />
-                    </div>
-                    
                     {posts.map((post: any, index: number) => (
                       <div key={`${post._id || post.id}-${refreshKey}`}>
                         <BlogPost
@@ -173,16 +165,6 @@ function AppContent() {
                           characterImage={characterImages[index % characterImages.length]}
                           index={index}
                         />
-                        {/* Personaje aleatorio cada 2 posts */}
-                        {(index + 1) % 2 === 0 && index < posts.length - 1 && (
-                          <div className="flex justify-center my-12">
-                            <RandomCharacter 
-                              size="medium" 
-                              position={index % 4 === 0 ? 'left' : 'right'}
-                              animated={true} 
-                            />
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>

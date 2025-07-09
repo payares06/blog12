@@ -4,7 +4,6 @@ import { usersAPI, siteSettingsAPI, postsAPI, activitiesAPI } from '../services/
 import { useAuth } from '../context/AuthContext';
 import { ImageGallery } from './ImageGallery';
 import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
-import { RandomCharacter } from './RandomCharacter';
 
 interface UserProfileProps {
   userId: string;
@@ -128,11 +127,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId, onBack }) => {
         {/* Profile Header */}
         <div className="bg-white rounded-2xl shadow-lg border-4 border-black p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Personaje decorativo en el perfil */}
-            <div className="absolute top-4 right-4 hidden lg:block" style={{ zIndex: -1 }}>
-              <RandomCharacter size="small" animated={true} safeMode={true} />
-            </div>
-            
             {/* Profile Picture */}
             <div className="w-32 h-32 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full flex items-center justify-center border-4 border-black shadow-lg">
               <span className="text-4xl font-bold text-white">

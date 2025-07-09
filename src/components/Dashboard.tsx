@@ -5,7 +5,6 @@ import { postsAPI, activitiesAPI, imagesAPI, siteSettingsAPI } from '../services
 import { getBackendStatus } from '../services/api';
 import { PublishModal } from './PublishModal';
 import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
-import { RandomCharacter } from './RandomCharacter';
 
 interface DashboardProps {
   onDataUpdate: () => void;
@@ -305,9 +304,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
       
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <RandomCharacter size="small" animated={true} />
-            <div className="flex-1">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Dashboard</h1>
           <div className="flex justify-between items-center">
             <p className="text-lg text-gray-600">Gestiona el contenido de tu blog</p>
@@ -318,8 +314,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onDataUpdate }) => {
               <Send size={20} />
               Publicar
             </button>
-          </div>
-            </div>
           </div>
         </div>
 
