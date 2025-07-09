@@ -207,8 +207,46 @@ export const postsAPI = {
     }
   },
 
+  uploadDocument: async (postId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+
+    const token = getAuthToken();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for uploads
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/posts/${postId}/upload-document`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
   deleteImage: async (postId: string, imageId: string) => {
     return apiRequest(`/posts/${postId}/images/${imageId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  deleteDocument: async (postId: string, documentId: string) => {
+    return apiRequest(`/posts/${postId}/documents/${documentId}`, {
       method: 'DELETE',
     });
   },

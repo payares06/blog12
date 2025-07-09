@@ -35,6 +35,7 @@ const documentFilter = (req, file, cb) => {
 const generalFilter = (req, file, cb) => {
   const allowedTypes = [
     'image/png', 'image/jpeg', 'image/jpg',
+    'image/gif', 'image/webp',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -44,7 +45,7 @@ const generalFilter = (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`Tipo de archivo no permitido. Solo se permiten imágenes (PNG, JPG, JPEG) y documentos (PDF, DOC, DOCX, TXT)`), false);
+    cb(new Error(`Tipo de archivo no permitido. Solo se permiten imágenes (PNG, JPG, JPEG, GIF, WEBP) y documentos (PDF, DOC, DOCX, TXT)`), false);
   }
 };
 

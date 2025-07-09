@@ -28,7 +28,15 @@ router.post('/:id/upload-image',
   postController.uploadPostImage
 );
 
+router.post('/:id/upload-document', 
+  authenticateToken, 
+  upload.single('document'), 
+  handleMulterError, 
+  postController.uploadPostDocument
+);
+
 // Rutas para eliminar archivos
 router.delete('/:id/images/:imageId', authenticateToken, postController.deletePostImage);
+router.delete('/:id/documents/:documentId', authenticateToken, postController.deletePostDocument);
 
 module.exports = router;

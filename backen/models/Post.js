@@ -65,6 +65,29 @@ const postSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  documents: [{
+    name: {
+      type: String,
+      required: true
+    },
+    data: {
+      type: String,
+      required: true
+    },
+    size: {
+      type: Number,
+      required: true
+    },
+    mimeType: {
+      type: String,
+      required: true,
+      enum: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   comments: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -104,6 +127,9 @@ const postSchema = new mongoose.Schema({
 postSchema.pre('save', function(next) {
   if (this.postImages && this.postImages.length > 5) {
     return next(new Error('No se pueden subir más de 5 imágenes por post'));
+  }
+  if (this.documents && this.documents.length > 3) {
+    return next(new Error('No se pueden subir más de 3 documentos por post'));
   }
   next();
 });

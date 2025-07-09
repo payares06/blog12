@@ -277,6 +277,108 @@ class PostController {
     }
   }
 
+  // Subir documento a post
+  async uploadPostDocument(req, res) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.userId;
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se proporcionó ningún archivo de documento'
+        });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de post inválido'
+        });
+      }
+
+      const post = await Post.findOne({ _id: id, userId });
+
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado o no autorizado'
+        });
+      }
+
+      if (post.documents.length >= 3) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se pueden subir más de 3 documentos por post'
+        });
+      }
+
+      // Convertir buffer a base64
+      const base64Document = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+      const newDocument = {
+        name: req.file.originalname,
+        data: base64Document,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date()
+      };
+
+      post.documents.push(newDocument);
+      await post.save();
+
+      res.json({
+        success: true,
+        message: 'Documento subido exitosamente',
+        document: newDocument
+      });
+    } catch (error) {
+      console.error('Error subiendo documento:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  };
+
+  // Eliminar documento de post
+  async deletePostDocument(req, res) {
+    try {
+      const { id, documentId } = req.params;
+      const userId = req.user.userId;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID de post inválido'
+        });
+      }
+
+      const post = await Post.findOne({ _id: id, userId });
+
+      if (!post) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post no encontrado o no autorizado'
+        });
+      }
+
+      post.documents = post.documents.filter(doc => doc._id.toString() !== documentId);
+      await post.save();
+
+      res.json({
+        success: true,
+        message: 'Documento eliminado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error eliminando documento:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor'
+      });
+    }
+  };
+
   // Eliminar imagen de post
   async deletePostImage(req, res) {
     try {
