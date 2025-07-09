@@ -9,6 +9,8 @@ import { UserProfile } from './UserProfile';
 import { CommentModal } from './CommentModal';
 import { FloatingElements, DecorativeSpheres, GeometricShapes, FloatingParticles } from './FloatingElements';
 
+import { PostViewer } from './PostViewer';
+
 interface SocialViewProps {
   selectedUserId?: string;
   onBack?: () => void;
@@ -29,6 +31,8 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedPostForComments, setSelectedPostForComments] = useState<any>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [selectedPostForViewer, setSelectedPostForViewer] = useState<any>(null);
+  const [isPostViewerOpen, setIsPostViewerOpen] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -129,6 +133,11 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
   const openCommentModal = (post: any) => {
     setSelectedPostForComments(post);
     setIsCommentModalOpen(true);
+  };
+
+  const openPostViewer = (post: any) => {
+    setSelectedPostForViewer(post);
+    setIsPostViewerOpen(true);
   };
 
   const handleCommentUpdate = () => {
@@ -240,6 +249,7 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
                     onLikePost={handleLikePost}
                     onOpenGallery={openImageGallery}
                     onOpenComments={openCommentModal}
+                    onOpenPostViewer={openPostViewer}
                   />
                 </div>
               ))}
@@ -270,6 +280,14 @@ export const SocialView: React.FC<SocialViewProps> = ({ selectedUserId, onBack }
         post={selectedPostForComments}
         onUpdate={handleCommentUpdate}
       />
+
+      {/* Post Viewer Modal */}
+      <PostViewer
+        isOpen={isPostViewerOpen}
+        onClose={() => setIsPostViewerOpen(false)}
+        post={selectedPostForViewer}
+        onUpdate={handleCommentUpdate}
+      />
     </div>
   );
 };
@@ -282,6 +300,7 @@ const UserFeedCard: React.FC<{
   onLikePost: (postId: string) => void;
   onOpenGallery?: (images: any[], startIndex: number) => void;
   onOpenComments?: (post: any) => void;
+  onOpenPostViewer?: (post: any) => void;
 }> = ({ user, currentUser, onUserClick, onLikePost, onOpenGallery, onOpenComments }) => {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userActivities, setUserActivities] = useState<any[]>([]);
@@ -393,6 +412,17 @@ const UserFeedCard: React.FC<{
             {/* Post Images */}
             {item.type === 'post' && item.postImages && item.postImages.length > 0 && (
               <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600">
+                    {item.postImages.length} imagen{item.postImages.length > 1 ? 'es' : ''}
+                  </span>
+                  <button
+                    onClick={() => onOpenPostViewer && onOpenPostViewer(item)}
+                    className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+                  >
+                    Ver completo
+                  </button>
+                </div>
                 <div 
                   className="grid gap-2 cursor-pointer"
                   onClick={() => onOpenGallery && onOpenGallery(item.postImages, 0)}
@@ -408,7 +438,7 @@ const UserFeedCard: React.FC<{
                       key={imgIndex}
                       src={img.data}
                       alt={img.name}
-                      className={`w-full object-cover rounded border-2 border-black hover:opacity-80 transition-opacity ${
+                      className={`w-full object-cover rounded-lg border-2 border-black hover:opacity-80 transition-opacity ${
                         item.postImages.length === 1 ? 'h-64' : 
                         item.postImages.length === 2 ? 'h-48' : 
                         'h-32'
@@ -420,6 +450,33 @@ const UserFeedCard: React.FC<{
                       +{item.postImages.length - 4}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Documents Preview */}
+            {item.type === 'post' && item.documents && item.documents.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                    <FileText size={14} />
+                    {item.documents.length} documento{item.documents.length > 1 ? 's' : ''}
+                  </span>
+                  <button
+                    onClick={() => onOpenPostViewer && onOpenPostViewer(item)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    Ver documentos
+                  </button>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-blue-600" />
+                    <span className="text-sm text-blue-800">
+                      {item.documents[0].name}
+                      {item.documents.length > 1 && ` y ${item.documents.length - 1} más`}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
